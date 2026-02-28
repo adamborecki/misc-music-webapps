@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Uke Chords — Groups</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --line:rgba(255,255,255,.14);
+      --text:#eef2ff;
+      --muted:rgba(238,242,255,.72);
+      --accent:rgba(126,224,255,.95);
+      --accent2:rgba(179,255,158,.95);
+      --danger:rgba(255,107,139,.95);
+      --shadow:0 18px 60px rgba(0,0,0,.40);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1000px 700px at 15% -10%, rgba(126,224,255,.20), transparent 60%),
+        radial-gradient(900px 650px at 90% 10%, rgba(179,255,158,.14), transparent 55%),
+        radial-gradient(900px 650px at 50% 115%, rgba(255,107,139,.10), transparent 55%),
+        var(--bg);
+    }
+    .wrap{max-width:1040px;margin:0 auto;padding:16px 14px 26px}
+
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:10px 6px 14px;
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:40px;height:40px;border-radius:14px;
+      background:linear-gradient(135deg, rgba(126,224,255,.9), rgba(179,255,158,.85));
+      display:grid;place-items:center;color:#071022;font-weight:900;
+      box-shadow:var(--shadow);
+    }
+    h1{margin:0;font-size:16px;letter-spacing:.2px}
+    .sub{margin-top:3px;font-size:12px;color:var(--muted)}
+
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{border-color:rgba(126,224,255,.45);background:rgba(126,224,255,.10)}
+    .btn.ghost{background:transparent}
+    .btn.danger{border-color:rgba(255,107,139,.45);background:rgba(255,107,139,.10)}
+    .btn.small{padding:8px 10px;border-radius:12px;font-size:12px}
+
+    /* Group switcher */
+    .groupBar{
+      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:10px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      box-shadow:var(--shadow);
+    }
+    .gPill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      max-width: 220px;
+    }
+    .gPill.sel{
+      border-color:rgba(126,224,255,.55);
+      background:rgba(126,224,255,.12);
+    }
+    .gPill .t{
+      font-weight:900;
+      font-size:12px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      max-width:170px;
+    }
+
+    /* Bubble */
+    .bubble{
+      margin-top:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .bubbleTop{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:4px 6px 10px;
+      flex-wrap:wrap;
+    }
+    .bubbleTitle{
+      display:flex;flex-direction:column;gap:3px;
+      min-width:220px;
+    }
+    .bubbleTitle .name{font-weight:900;font-size:14px}
+    .bubbleTitle .hint{font-size:12px;color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .spacer{height:12px}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+
+    /* Chord grid inside bubble */
+    .chGrid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:10px;
+      padding:6px;
+    }
+    @media (max-width: 860px){ .chGrid{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (max-width: 560px){ .chGrid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+    .chCard{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);
+      border-radius:20px;
+      padding:10px;
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      position:relative;
+      overflow:hidden;
+    }
+    .chCard.sel{
+      border-color:rgba(126,224,255,.55);
+      background:rgba(126,224,255,.10);
+      box-shadow:0 14px 40px rgba(0,0,0,.25);
+    }
+    .chName{
+      font-weight:900;
+      font-size:13px;
+      line-height:1.05;
+      margin-bottom:6px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .chSub{
+      font-size:11px;color:var(--muted);font-family:var(--mono);
+      margin-top:4px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .miniCanvas{
+      width:100%;
+      height:auto;
+      aspect-ratio: 1 / 1;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.035);
+    }
+
+    /* Main panel (DETAILS FIRST, CANVAS SECOND) */
+    .panel{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1fr 340px; /* details left, canvas right */
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width:900px){
+      .panel{grid-template-columns:1fr;} /* stack: details first, then canvas */
+    }
+
+    canvas#cv{
+      width:100%;
+      height:auto;
+      aspect-ratio: 11 / 13;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:0 14px 40px rgba(0,0,0,.28);
+    }
+    .card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      border-radius:22px;
+      padding:14px;
+    }
+    .titleLine{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+      flex-wrap:wrap;
+    }
+    .chTitle{margin:0;font-size:20px;letter-spacing:.2px}
+    .meta{margin-top:6px;color:var(--muted);font-size:12px;display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      font-family:var(--mono);
+      color:var(--muted);
+      background:rgba(255,255,255,.04);
+    }
+    .note{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+    }
+    .input::placeholder{color:rgba(238,242,255,.55)}
+
+    /* Transpose UI */
+    .segRow{
+      display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+      margin-top:10px;
+    }
+    .seg{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .seg.sel{
+      border-color:rgba(126,224,255,.55);
+      background:rgba(126,224,255,.12);
+    }
+
+    /* Overlay / sheet */
+    .overlay{
+      position:fixed;inset:0;
+      display:none;
+      background:rgba(0,0,0,.56);
+      align-items:flex-end;justify-content:center;
+      padding:14px;
+      z-index:50;
+    }
+    .sheet{
+      width:min(760px,100%);
+      max-height:86vh;
+      overflow:auto;
+      border-radius:26px;
+      border:1px solid var(--line);
+      background:rgba(12,18,36,.92);
+      box-shadow:0 24px 80px rgba(0,0,0,.6);
+    }
+    .sheetHd{
+      position:sticky;top:0;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      backdrop-filter: blur(10px);
+      background:rgba(12,18,36,.92);
+    }
+    .sheetHd .t{font-weight:900}
+    .sheetBd{padding:14px}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:12px 12px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+    }
+    .item .left{display:flex;flex-direction:column;gap:3px;min-width:0}
+    .item .nm{font-weight:900; overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .item .sm{font-size:12px;color:var(--muted);font-family:var(--mono)}
+    .tiny{font-size:12px;color:var(--muted)}
+    .toast{
+      position:fixed;top:12px;left:50%;transform:translateX(-50%);
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(12,18,36,.92);
+      box-shadow:var(--shadow);
+      display:none;
+      z-index:60;
+      font-size:12px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">U</div>
+      <div>
+        <h1>Uke Chords</h1>
+        <div class="sub">Songs as groups. Tap a chord card to view it.</div>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn ghost" id="btnAdvanced">Advanced</button>
+    </div>
+  </header>
+
+  <!-- Group switcher -->
+  <div class="groupBar" id="groupBar"></div>
+
+  <!-- Bubble: current group -->
+  <section class="bubble">
+    <div class="bubbleTop">
+      <div class="bubbleTitle">
+        <div class="name" id="groupName">—</div>
+        <div class="hint">Tap a chord card. Add more chords to this song group.</div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnAdd">+ Add chord</button>
+        <button class="btn" id="btnRename">Rename group</button>
+      </div>
+    </div>
+
+    <div class="chGrid" id="chGrid"></div>
+  </section>
+
+  <div class="panel">
+    <!-- DETAILS FIRST -->
+    <section class="card">
+      <div class="titleLine">
+        <div style="min-width:220px;">
+          <h2 class="chTitle" id="title">—</h2>
+          <div class="meta">
+            <span class="chip" id="shapeChip">shape: —</span>
+            <span class="chip" id="notesChip">notes: —</span>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn" id="btnNick">Nickname</button>
+          <button class="btn danger" id="btnRemove">Remove</button>
+        </div>
+      </div>
+
+      <div class="note" id="tip">—</div>
+
+      <!-- Transpose (simple) -->
+      <div class="hr"></div>
+      <div class="tiny">Transpose (diagram-only):</div>
+      <div class="segRow" id="transposeRow">
+        <div class="seg sel" data-tr="0">No transpose</div>
+        <div class="seg" data-tr="5">+5 frets (fourth)</div>
+        <div class="seg" data-tr="7">+7 frets (fifth)</div>
+        <div class="seg" id="segCustom">Custom…</div>
+      </div>
+      <div class="tiny" id="transposeNote" style="margin-top:6px;">
+        Adds frets to all fingered notes (open strings stay open).
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="row">
+        <button class="btn" id="btnPrev">◀</button>
+        <button class="btn" id="btnNext">▶</button>
+      </div>
+
+      <div class="hr"></div>
+      <div class="tiny">
+        Tip: chord cards include mini diagrams for quick scanning.
+      </div>
+    </section>
+
+    <!-- CANVAS SECOND -->
+    <canvas id="cv" width="660" height="780" aria-label="Chord diagram"></canvas>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Add chord sheet -->
+<div class="overlay" id="ovAdd">
+  <div class="sheet">
+    <div class="sheetHd">
+      <div class="t">Add a chord</div>
+      <button class="btn" data-close="ovAdd">Close</button>
+    </div>
+    <div class="sheetBd">
+      <input class="input" id="search" placeholder="Search (e.g., Am, Bb, F#7, Cmaj7)…" />
+      <div class="hr"></div>
+      <div class="row" style="gap:8px">
+        <button class="btn small" data-bucket="popular">Popular</button>
+        <button class="btn small" data-bucket="major">Major</button>
+        <button class="btn small" data-bucket="minor">Minor</button>
+        <button class="btn small" data-bucket="7">7</button>
+        <button class="btn small" data-bucket="maj7">maj7</button>
+        <button class="btn small" data-bucket="m7">m7</button>
+        <button class="btn small" data-bucket="sus">sus</button>
+      </div>
+      <div class="hr"></div>
+      <div class="list" id="addList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Nickname sheet -->
+<div class="overlay" id="ovNick">
+  <div class="sheet">
+    <div class="sheetHd">
+      <div class="t">Nickname</div>
+      <button class="btn" data-close="ovNick">Close</button>
+    </div>
+    <div class="sheetBd">
+      <div class="tiny">Nickname shows on the chord card. Leave blank to remove.</div>
+      <div class="hr"></div>
+      <input class="input" id="nickInput" placeholder="e.g., Campfire G" />
+      <div class="spacer"></div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn primary" id="nickSave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Advanced sheet -->
+<div class="overlay" id="ovAdv">
+  <div class="sheet">
+    <div class="sheetHd">
+      <div class="t">Advanced</div>
+      <button class="btn" data-close="ovAdv">Close</button>
+    </div>
+    <div class="sheetBd">
+      <div class="tiny">Groups are songs. Create, rename, switch, backup.</div>
+      <div class="hr"></div>
+
+      <div class="list">
+        <div class="item">
+          <div class="left">
+            <div class="nm">New group</div>
+            <div class="sm">Create a new song group</div>
+          </div>
+          <button class="btn primary" id="btnNewGroup">+ Create</button>
+        </div>
+
+        <div class="item">
+          <div class="left">
+            <div class="nm">Duplicate current group</div>
+            <div class="sm">Handy for transposing</div>
+          </div>
+          <button class="btn" id="btnDupGroup">Duplicate</button>
+        </div>
+
+        <div class="item">
+          <div class="left">
+            <div class="nm">Delete current group</div>
+            <div class="sm">Careful — cannot undo</div>
+          </div>
+          <button class="btn danger" id="btnDelGroup">Delete</button>
+        </div>
+
+        <div class="item">
+          <div class="left">
+            <div class="nm">Export / Import</div>
+            <div class="sm">Backup your local data</div>
+          </div>
+          <div class="row">
+            <button class="btn" id="btnExport">Export</button>
+            <button class="btn" id="btnImport">Import</button>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="left">
+            <div class="nm">Factory reset</div>
+            <div class="sm">Deletes everything on this device</div>
+          </div>
+          <button class="btn danger" id="btnFactory">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KEY = "uke_groups.v2";
+
+  // --- Built-in chord library ---
+  const BUILTIN = [
+    {name:"C", shape:"0003", tip:"Anchor ring finger on A3."},
+    {name:"G", shape:"0232", tip:"Common + bright. Try slow changes from C."},
+    {name:"D", shape:"2220", tip:"Stacked fret. Keep wrist relaxed."},
+    {name:"A", shape:"2100", tip:"Small A. Great in pop progressions."},
+    {name:"Am", shape:"2000", tip:"Easy minor. Pairs with C and F."},
+    {name:"F", shape:"2010", tip:"Two-finger F is fine."},
+    {name:"Em", shape:"0432"},
+    {name:"Dm", shape:"2210"},
+    {name:"E", shape:"1402"},
+    {name:"Bb", shape:"3211"},
+    {name:"C7", shape:"0001"},
+    {name:"G7", shape:"0212"},
+    {name:"D7", shape:"2223"},
+    {name:"A7", shape:"0100"},
+    {name:"E7", shape:"1202"},
+    {name:"F7", shape:"2310"},
+    {name:"B7", shape:"2322"},
+    {name:"Am7", shape:"0000"},
+    {name:"Dm7", shape:"2213"},
+    {name:"Em7", shape:"0202"},
+    {name:"Cmaj7", shape:"0002"},
+    {name:"Gmaj7", shape:"0222"},
+    {name:"Amaj7", shape:"1100"},
+    {name:"Csus4", shape:"0013"},
+    {name:"Gsus4", shape:"0233"},
+    {name:"Asus4", shape:"2200"},
+  ];
+  const BUILTIN_MAP = Object.fromEntries(BUILTIN.map(c => [norm(c.name), c]));
+
+  // --- State ---
+  function defaultState(){
+    return {
+      groups: [
+        {
+          id: uid(),
+          name: "Warm-up",
+          chords: [{ name:"C", nick:"" },{ name:"G", nick:"" },{ name:"D", nick:"" },{ name:"A", nick:"" }],
+          selectedIndex: 0
+        },
+        { id: uid(), name: "Blues in C", chords: [{ name:"C7", nick:"" },{ name:"F7", nick:"" },{ name:"G7", nick:"" }], selectedIndex: 0 },
+        { id: uid(), name: "Blues in D", chords: [{ name:"D7", nick:"" },{ name:"G7", nick:"" },{ name:"A7", nick:"" }], selectedIndex: 0 }
+      ],
+      activeGroupId: null,
+      transpose: 0 // number of frets to add (diagram-only)
+    };
+  }
+
+  let state = load();
+  let active = getActiveGroup();
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(!raw){
+        const s = defaultState();
+        s.activeGroupId = s.groups[0].id;
+        save(s);
+        return s;
+      }
+      const parsed = JSON.parse(raw);
+      const base = defaultState();
+      const merged = { ...base, ...parsed };
+
+      if(!Array.isArray(merged.groups) || merged.groups.length === 0){
+        const s = defaultState();
+        s.activeGroupId = s.groups[0].id;
+        save(s);
+        return s;
+      }
+      if(!merged.activeGroupId) merged.activeGroupId = merged.groups[0].id;
+      merged.transpose = Number.isFinite(merged.transpose) ? merged.transpose : 0;
+
+      merged.groups = merged.groups.map(g => ({
+        id: g.id || uid(),
+        name: String(g.name || "Untitled").trim() || "Untitled",
+        chords: Array.isArray(g.chords) && g.chords.length ? g.chords : [{name:"C",nick:""}],
+        selectedIndex: clamp(Number.isFinite(g.selectedIndex) ? g.selectedIndex : 0, 0, (g.chords?.length||1)-1)
+      }));
+
+      if(!merged.groups.some(g => g.id === merged.activeGroupId)){
+        merged.activeGroupId = merged.groups[0].id;
+      }
+
+      save(merged);
+      return merged;
+    }catch(e){
+      const s = defaultState();
+      s.activeGroupId = s.groups[0].id;
+      save(s);
+      return s;
+    }
+  }
+  function save(s=state){ localStorage.setItem(KEY, JSON.stringify(s)); }
+
+  function getActiveGroup(){
+    return state.groups.find(g => g.id === state.activeGroupId) || state.groups[0];
+  }
+
+  // --- DOM ---
+  const $ = (s)=>document.querySelector(s);
+  const groupBar = $("#groupBar");
+  const groupNameEl = $("#groupName");
+  const chGrid = $("#chGrid");
+  const cv = $("#cv");
+  const ctx = cv.getContext("2d");
+
+  // --- Utils ---
+  function norm(s){ return String(s||"").trim().replace(/\s+/g,""); }
+  function clamp(n,a,b){ return Math.max(a, Math.min(b, n)); }
+  function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(2,8); }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[ch]));
+  }
+  function show(id){ $("#"+id).style.display = "flex"; }
+  function hide(id){ $("#"+id).style.display = "none"; }
+  function toast(msg){
+    const t = $("#toast");
+    t.textContent = msg;
+    t.style.display = "block";
+    clearTimeout(toast._tm);
+    toast._tm = setTimeout(()=> t.style.display = "none", 1400);
+  }
+
+  // close overlays
+  document.querySelectorAll("[data-close]").forEach(btn=>{
+    btn.addEventListener("click", ()=> hide(btn.getAttribute("data-close")));
+  });
+  document.querySelectorAll(".overlay").forEach(ov=>{
+    ov.addEventListener("click", (e)=>{ if(e.target === ov) hide(ov.id); });
+  });
+
+  // --- Chord math / shapes ---
+  const NOTE_NAMES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const NOTE_NAMES_FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+  const STRINGS = ["G","C","E","A"];
+  const TUNING_PC = { G:7, C:0, E:4, A:9 };
+  const mod = (n,m)=>((n%m)+m)%m;
+
+  function parseShape(shape){
+    const s = String(shape).trim();
+    let parts;
+    if(s.includes("-")) parts = s.split("-");
+    else if(s.includes(" ")) parts = s.split(/\s+/);
+    else parts = s.split("");
+    if(parts.length !== 4) return null;
+    const frets = parts.map(p=>{
+      if(String(p).toLowerCase()==="x") return -1;
+      const n = Number(p);
+      return Number.isFinite(n) ? n : -1;
+    });
+    return frets;
+  }
+  function formatShapePretty(shape){
+    const frets = parseShape(shape);
+    if(!frets) return String(shape);
+    return frets.map(f => (f<0?"x":f)).join("-");
+  }
+
+  function applyTransposeToFrets(frets, delta){
+    // diagram-only: add delta to fingered frets (>0). Keep open (0) as 0. Keep mute (-1).
+    if(!delta) return frets.slice();
+    return frets.map(f => (f > 0 ? (f + delta) : f));
+  }
+
+  function notesFromFrets(frets){
+    const pcs = frets.map((f,i)=>{
+      if(f<0) return null;
+      const base = TUNING_PC[STRINGS[i]];
+      return mod(base+f,12);
+    }).filter(v=>v!==null);
+
+    const uniq = [...new Set(pcs)];
+    const preferFlats = uniq.some(pc => [1,3,6,8,10].includes(pc));
+    const names = uniq.map(pc => (preferFlats ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP)[pc]);
+    return names;
+  }
+
+  // --- Diagram drawing ---
+  function roundRect(ctx,x,y,w,h,r){
+    const rr = Math.min(r,w/2,h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
+    ctx.closePath();
+  }
+  function fontStack(){ return 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'; }
+
+  function drawDiagram(ctx2d, width, height, name, frets, nick, bigTitle){
+    ctx2d.clearRect(0,0,width,height);
+
+    roundRect(ctx2d, 14, 14, width-28, height-28, 22);
+    ctx2d.fillStyle = "rgba(255,255,255,.045)";
+    ctx2d.fill();
+    ctx2d.strokeStyle = "rgba(255,255,255,.14)";
+    ctx2d.lineWidth = 2;
+    ctx2d.stroke();
+
+    // title
+    if(bigTitle){
+      const title = (nick && nick.trim()) ? nick.trim() : name;
+      ctx2d.textAlign = "center";
+      ctx2d.fillStyle = "rgba(238,242,255,.95)";
+      ctx2d.font = "900 44px " + fontStack();
+      ctx2d.fillText(title, width/2, 92);
+
+      if(nick && nick.trim()){
+        ctx2d.fillStyle = "rgba(238,242,255,.70)";
+        ctx2d.font = "800 18px " + fontStack();
+        ctx2d.fillText(name, width/2, 120);
+      }
+    }
+
+    // layout
+    const padX = bigTitle ? 86 : 26;
+    const top  = bigTitle ? 150 : 36;
+    const w = width - padX*2;
+    const h = height - top - (bigTitle ? 140 : 44);
+    const strings = 4;
+    const fretsShown = 5;
+
+    // base fret (default 1)
+    const used = frets.filter(f => f > 0);
+    const minF = used.length ? Math.min(...used) : 1;
+    const maxF = used.length ? Math.max(...used) : 1;
+
+    let baseFret = 1;
+    if(maxF > fretsShown){
+      baseFret = Math.max(1, minF);
+    }
+
+    // (1) Remove the word "nut" in UI: show nothing when baseFret==1; show "Xfr" otherwise.
+    if(baseFret !== 1){
+      ctx2d.textAlign = "left";
+      ctx2d.fillStyle = "rgba(238,242,255,.70)";
+      ctx2d.font = (bigTitle ? "800 16px " : "800 12px ") + fontStack();
+      ctx2d.fillText(baseFret + "fr", padX, top-14);
+    }
+
+    // fret lines
+    for(let f=0; f<=fretsShown; f++){
+      const y = top + (h/fretsShown)*f;
+      ctx2d.beginPath();
+      ctx2d.moveTo(padX, y);
+      ctx2d.lineTo(padX+w, y);
+      ctx2d.strokeStyle = "rgba(255,255,255,.16)";
+      ctx2d.lineWidth = bigTitle ? 3 : 2;
+      ctx2d.stroke();
+    }
+    // nut thickness (visual only)
+    if(baseFret === 1){
+      ctx2d.beginPath();
+      ctx2d.moveTo(padX, top);
+      ctx2d.lineTo(padX+w, top);
+      ctx2d.strokeStyle = "rgba(255,255,255,.28)";
+      ctx2d.lineWidth = bigTitle ? 9 : 6;
+      ctx2d.stroke();
+    }
+    // strings
+    for(let s=0; s<strings; s++){
+      const x = padX + (w/(strings-1))*s;
+      ctx2d.beginPath();
+      ctx2d.moveTo(x, top);
+      ctx2d.lineTo(x, top+h);
+      ctx2d.strokeStyle = "rgba(255,255,255,.14)";
+      ctx2d.lineWidth = bigTitle ? 4 : 2.5;
+      ctx2d.stroke();
+    }
+
+    // open/mute markers
+    ctx2d.textAlign = "center";
+    ctx2d.font = (bigTitle ? "900 22px " : "900 14px ") + fontStack();
+    for(let s=0; s<strings; s++){
+      const x = padX + (w/(strings-1))*s;
+      const f = frets[s];
+      if(f < 0){
+        ctx2d.fillStyle = "rgba(255,107,139,.95)";
+        ctx2d.fillText("x", x, top-(bigTitle?34:18));
+      } else if(f === 0){
+        ctx2d.fillStyle = "rgba(179,255,158,.95)";
+        ctx2d.fillText("o", x, top-(bigTitle?34:18));
+      }
+    }
+
+    // dots (correct mapping)
+    for(let s=0; s<strings; s++){
+      const x = padX + (w/(strings-1))*s;
+      const f = frets[s];
+      if(f <= 0) continue;
+
+      const spaceIndex = (f - baseFret);
+      const y = top + (h/fretsShown) * (spaceIndex + 0.5);
+
+      ctx2d.beginPath();
+      ctx2d.arc(x, y, bigTitle ? 22 : 10, 0, Math.PI*2);
+      ctx2d.fillStyle = "rgba(126,224,255,.18)";
+      ctx2d.fill();
+      ctx2d.strokeStyle = "rgba(126,224,255,.58)";
+      ctx2d.lineWidth = bigTitle ? 3 : 2;
+      ctx2d.stroke();
+
+      ctx2d.fillStyle = "rgba(238,242,255,.92)";
+      ctx2d.font = (bigTitle ? "900 18px " : "900 10px ") + fontStack();
+      ctx2d.fillText(String(f), x, y + (bigTitle ? 6 : 3.5));
+    }
+  }
+
+  // --- Current chord helpers ---
+  function curGroup(){
+    active = getActiveGroup();
+    return active;
+  }
+  function curChord(){
+    const g = curGroup();
+    g.selectedIndex = clamp(g.selectedIndex, 0, g.chords.length-1);
+    return g.chords[g.selectedIndex];
+  }
+  function getChordEntry(name){
+    return BUILTIN_MAP[norm(name)] || null;
+  }
+
+  // --- Rendering ---
+  function renderGroupBar(){
+    groupBar.innerHTML = "";
+    state.groups.forEach(g=>{
+      const pill = document.createElement("div");
+      pill.className = "gPill" + (g.id === state.activeGroupId ? " sel" : "");
+      pill.innerHTML = `<div class="t">${escapeHtml(g.name)}</div>`;
+      pill.addEventListener("click", ()=>{
+        state.activeGroupId = g.id;
+        save();
+        render();
+      });
+      groupBar.appendChild(pill);
+    });
+
+    const addBtn = document.createElement("button");
+    addBtn.className = "btn small primary";
+    addBtn.textContent = "+ Group";
+    addBtn.addEventListener("click", ()=>{
+      const nm = prompt("New group name:", "New Song");
+      if(nm === null) return;
+      const name = String(nm).trim() || "New Song";
+      const g = { id: uid(), name, chords:[{name:"C",nick:""}], selectedIndex:0 };
+      state.groups.unshift(g);
+      state.activeGroupId = g.id;
+      save();
+      render();
+      toast("Group created");
+    });
+    groupBar.appendChild(addBtn);
+  }
+
+  function renderBubble(){
+    const g = curGroup();
+    groupNameEl.textContent = g.name;
+
+    chGrid.innerHTML = "";
+    g.chords.forEach((c, idx)=>{
+      const entry = getChordEntry(c.name);
+      const baseFrets = parseShape(entry?.shape || "0000") || [0,0,0,0];
+      const frets = applyTransposeToFrets(baseFrets, state.transpose);
+
+      const card = document.createElement("div");
+      card.className = "chCard" + (idx===g.selectedIndex ? " sel" : "");
+
+      const label = (c.nick && c.nick.trim()) ? c.nick.trim() : c.name;
+      const showSub = (c.nick && c.nick.trim());
+
+      card.innerHTML = `
+        <div class="chName">${escapeHtml(label)}</div>
+        <canvas class="miniCanvas" width="220" height="220"></canvas>
+        ${showSub ? `<div class="chSub">${escapeHtml(c.name)} · ${escapeHtml(formatShapePretty(entry?.shape || "0000"))}</div>`
+                 : `<div class="chSub">${escapeHtml(formatShapePretty(entry?.shape || "0000"))}</div>`}
+      `;
+
+      card.addEventListener("click", ()=>{
+        g.selectedIndex = idx;
+        save();
+        renderMain();
+        renderBubbleSelection();
+      });
+
+      // mini diagram
+      const mini = card.querySelector("canvas");
+      const mctx = mini.getContext("2d");
+      drawDiagram(mctx, mini.width, mini.height, c.name, frets, c.nick||"", false);
+
+      chGrid.appendChild(card);
+    });
+  }
+
+  function renderBubbleSelection(){
+    const g = curGroup();
+    [...chGrid.children].forEach((node, idx)=>{
+      node.classList.toggle("sel", idx === g.selectedIndex);
+    });
+  }
+
+  function renderMain(){
+    const g = curGroup();
+    const c = curChord();
+    const entry = getChordEntry(c.name);
+    const baseFrets = parseShape(entry?.shape || "0000") || [0,0,0,0];
+    const frets = applyTransposeToFrets(baseFrets, state.transpose);
+
+    const notes = notesFromFrets(frets).join(" · ") || "—";
+    const label = (c.nick && c.nick.trim()) ? c.nick.trim() : c.name;
+
+    $("#title").textContent = label;
+    $("#shapeChip").textContent = "shape: " + formatShapePretty(entry?.shape || "0000");
+    $("#notesChip").textContent = "notes: " + notes;
+
+    const tp = state.transpose;
+    const tpText = tp === 0 ? "" : ` (diagram +${tp} frets)`;
+    $("#tip").textContent = (entry?.tip ? entry.tip : "Tip: add chords to build your song. Nicknames help you remember shapes.")
+      + tpText;
+
+    drawDiagram(ctx, cv.width, cv.height, c.name, frets, c.nick||"", true);
+  }
+
+  function renderTransposeUI(){
+    document.querySelectorAll(".seg[data-tr]").forEach(seg=>{
+      const v = Number(seg.getAttribute("data-tr"));
+      seg.classList.toggle("sel", v === state.transpose);
+    });
+    $("#transposeNote").textContent =
+      state.transpose === 0
+        ? "Adds frets to all fingered notes (open strings stay open)."
+        : `Transpose is ON: +${state.transpose} frets (diagram-only). Open strings remain open.`;
+  }
+
+  function render(){
+    renderGroupBar();
+    renderTransposeUI();
+    renderBubble();
+    renderMain();
+  }
+
+  // --- Add chord sheet ---
+  let addBucket = "popular";
+  function bucketMatch(name, bucket){
+    const n = name.toLowerCase();
+    if(bucket==="popular") return ["c","g","d","a","am","f","g7","c7","d7","a7","f7"].includes(n);
+    if(bucket==="major") return !/m(?!aj)/.test(n) && !/7|sus/.test(n);
+    if(bucket==="minor") return /m(?!aj)/.test(n) && !/maj7/.test(n);
+    if(bucket==="7") return /7$/.test(n) && !/maj7$/.test(n) && !/m7$/.test(n);
+    if(bucket==="maj7") return /maj7$/.test(n);
+    if(bucket==="m7") return /m7$/.test(n);
+    if(bucket==="sus") return /sus/.test(n);
+    return true;
+  }
+  function renderAddList(){
+    const q = norm($("#search").value).toLowerCase();
+    const list = $("#addList");
+    list.innerHTML = "";
+
+    let items = BUILTIN.filter(c => bucketMatch(c.name, addBucket));
+    if(q) items = items.filter(c => c.name.toLowerCase().includes(q));
+    items.sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}));
+
+    const g = curGroup();
+
+    items.forEach(c=>{
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div class="left">
+          <div class="nm">${escapeHtml(c.name)}</div>
+          <div class="sm">${escapeHtml(formatShapePretty(c.shape))}</div>
+        </div>
+        <button class="btn primary">Add</button>
+      `;
+      row.querySelector("button").addEventListener("click", ()=>{
+        g.chords.push({ name:c.name, nick:"" });
+        g.selectedIndex = g.chords.length - 1;
+        save();
+        hide("ovAdd");
+        $("#search").value = "";
+        render();
+        toast("Chord added");
+      });
+      list.appendChild(row);
+    });
+
+    if(items.length===0){
+      const empty = document.createElement("div");
+      empty.className = "tiny";
+      empty.textContent = "No matches.";
+      list.appendChild(empty);
+    }
+  }
+
+  // --- Nickname sheet ---
+  function openNick(){
+    const c = curChord();
+    $("#nickInput").value = c.nick || "";
+    show("ovNick");
+    setTimeout(()=>$("#nickInput").focus(), 60);
+  }
+
+  // --- Export / Import ---
+  function exportData(){
+    const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "uke_groups_backup.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast("Exported");
+  }
+  function importData(){
+    const inp = document.createElement("input");
+    inp.type="file";
+    inp.accept="application/json";
+    inp.onchange = ()=>{
+      const f = inp.files && inp.files[0];
+      if(!f) return;
+      const r = new FileReader();
+      r.onload = ()=>{
+        try{
+          const parsed = JSON.parse(String(r.result||"{}"));
+          if(!parsed || !Array.isArray(parsed.groups)) throw new Error("bad");
+          state = parsed;
+          state.transpose = Number.isFinite(state.transpose) ? state.transpose : 0;
+
+          if(!state.groups.length){
+            state = defaultState();
+            state.activeGroupId = state.groups[0].id;
+          }
+          if(!state.activeGroupId) state.activeGroupId = state.groups[0].id;
+
+          state.groups = state.groups.map(g => ({
+            id: g.id || uid(),
+            name: String(g.name || "Untitled").trim() || "Untitled",
+            chords: Array.isArray(g.chords) && g.chords.length ? g.chords : [{name:"C",nick:""}],
+            selectedIndex: clamp(Number.isFinite(g.selectedIndex) ? g.selectedIndex : 0, 0, (g.chords?.length||1)-1)
+          }));
+          if(!state.groups.some(g => g.id === state.activeGroupId)){
+            state.activeGroupId = state.groups[0].id;
+          }
+          save();
+          render();
+          hide("ovAdv");
+          toast("Imported");
+        }catch(e){
+          alert("Import failed (bad JSON).");
+        }
+      };
+      r.readAsText(f);
+    };
+    inp.click();
+  }
+
+  // --- Wire up buttons ---
+  $("#btnAdd").addEventListener("click", ()=>{
+    show("ovAdd");
+    renderAddList();
+    setTimeout(()=>$("#search").focus(), 60);
+  });
+  $("#search").addEventListener("input", renderAddList);
+  document.querySelectorAll("[data-bucket]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      addBucket = b.getAttribute("data-bucket");
+      renderAddList();
+    });
+  });
+
+  $("#btnRename").addEventListener("click", ()=>{
+    const g = curGroup();
+    const nm = prompt("Group name:", g.name);
+    if(nm === null) return;
+    g.name = String(nm).trim() || "Untitled";
+    save();
+    renderGroupBar();
+    groupNameEl.textContent = g.name;
+    toast("Renamed");
+  });
+
+  $("#btnNick").addEventListener("click", openNick);
+  $("#nickSave").addEventListener("click", ()=>{
+    const v = $("#nickInput").value.trim();
+    const c = curChord();
+    c.nick = v;
+    save();
+    hide("ovNick");
+    render();
+    toast("Saved nickname");
+  });
+
+  $("#btnRemove").addEventListener("click", ()=>{
+    const g = curGroup();
+    if(g.chords.length <= 1){
+      alert("Keep at least one chord in the group.");
+      return;
+    }
+    const i = g.selectedIndex;
+    g.chords.splice(i,1);
+    g.selectedIndex = clamp(i, 0, g.chords.length-1);
+    save();
+    render();
+    toast("Removed chord");
+  });
+
+  $("#btnPrev").addEventListener("click", ()=>{
+    const g = curGroup();
+    g.selectedIndex = clamp(g.selectedIndex - 1, 0, g.chords.length-1);
+    save();
+    renderMain();
+    renderBubbleSelection();
+  });
+  $("#btnNext").addEventListener("click", ()=>{
+    const g = curGroup();
+    g.selectedIndex = clamp(g.selectedIndex + 1, 0, g.chords.length-1);
+    save();
+    renderMain();
+    renderBubbleSelection();
+  });
+
+  // Transpose controls
+  document.querySelectorAll(".seg[data-tr]").forEach(seg=>{
+    seg.addEventListener("click", ()=>{
+      state.transpose = Number(seg.getAttribute("data-tr"));
+      save();
+      render();
+      toast(state.transpose===0 ? "Transpose off" : `Transpose +${state.transpose}`);
+    });
+  });
+  $("#segCustom").addEventListener("click", ()=>{
+    const cur = state.transpose || 0;
+    const inp = prompt("Custom transpose (frets to add, can be negative):", String(cur));
+    if(inp === null) return;
+    const n = Math.max(-24, Math.min(24, parseInt(inp,10)));
+    if(!Number.isFinite(n)){
+      alert("Please enter a number.");
+      return;
+    }
+    state.transpose = n;
+    save();
+    render();
+    toast(state.transpose===0 ? "Transpose off" : `Transpose ${state.transpose>0?"+":""}${state.transpose}`);
+  });
+
+  $("#btnAdvanced").addEventListener("click", ()=> show("ovAdv"));
+
+  $("#btnNewGroup").addEventListener("click", ()=>{
+    const nm = prompt("New group name:", "New Song");
+    if(nm === null) return;
+    const name = String(nm).trim() || "New Song";
+    const g = { id: uid(), name, chords:[{name:"C",nick:""}], selectedIndex:0 };
+    state.groups.unshift(g);
+    state.activeGroupId = g.id;
+    save();
+    hide("ovAdv");
+    render();
+    toast("Group created");
+  });
+
+  $("#btnDupGroup").addEventListener("click", ()=>{
+    const g = curGroup();
+    const nm = prompt("Name for duplicate:", g.name + " (copy)");
+    if(nm === null) return;
+    const copy = {
+      id: uid(),
+      name: String(nm).trim() || (g.name + " (copy)"),
+      chords: g.chords.map(x => ({ name:x.name, nick:x.nick || "" })),
+      selectedIndex: 0
+    };
+    state.groups.unshift(copy);
+    state.activeGroupId = copy.id;
+    save();
+    hide("ovAdv");
+    render();
+    toast("Duplicated");
+  });
+
+  $("#btnDelGroup").addEventListener("click", ()=>{
+    const g = curGroup();
+    if(state.groups.length <= 1){
+      alert("Keep at least one group.");
+      return;
+    }
+    if(!confirm(`Delete group "${g.name}"? This cannot be undone.`)) return;
+    state.groups = state.groups.filter(x => x.id !== g.id);
+    state.activeGroupId = state.groups[0].id;
+    save();
+    hide("ovAdv");
+    render();
+    toast("Deleted group");
+  });
+
+  $("#btnExport").addEventListener("click", exportData);
+  $("#btnImport").addEventListener("click", importData);
+
+  $("#btnFactory").addEventListener("click", ()=>{
+    if(!confirm("Factory reset? Deletes all groups on this device for this app.")) return;
+    localStorage.removeItem(KEY);
+    state = defaultState();
+    state.activeGroupId = state.groups[0].id;
+    save();
+    hide("ovAdv");
+    render();
+    toast("Reset");
+  });
+
+  // init
+  render();
+})();
+</script>
+</body>
+</html>
