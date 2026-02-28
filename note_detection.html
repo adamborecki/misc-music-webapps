@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pitch + Chord Detection Demo (Mic + MIDI)</title>
+  <style>
+    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:18px; line-height:1.25}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    button, select{font-size:14px; padding:8px 10px}
+    .card{border:1px solid #ddd; border-radius:12px; padding:12px; margin:12px 0}
+    .big{font-size:28px; font-weight:700}
+    .muted{color:#666}
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width: 700px){ .grid{grid-template-columns:1fr} }
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, monospace; background:#f3f3f3; padding:2px 6px; border-radius:6px}
+    canvas{width:100%; height:140px; border:1px solid #eee; border-radius:12px}
+    .pc{display:flex; gap:6px; flex-wrap:wrap}
+    .pill{padding:6px 10px; border:1px solid #ddd; border-radius:999px; font-size:13px}
+    .on{border-color:#333}
+  </style>
+</head>
+<body>
+  <h1>Pitch + Chord Detection Demo</h1>
+  <p class="muted">
+    Start audio with a click (browser requirement). Mic pitch is best for monophonic sources.
+    MIDI chord detection is the most reliable.
+  </p>
+
+  <div class="card">
+    <div class="row">
+      <button id="btnStartAudio">Start Audio Context</button>
+      <button id="btnMic">Enable Mic</button>
+      <span id="micStatus" class="muted">Mic: off</span>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="btnMidi">Enable MIDI</button>
+      <select id="midiIn"></select>
+      <span id="midiStatus" class="muted">MIDI: off</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="muted">MIC (best effort)</div>
+      <div class="big" id="micNote">—</div>
+      <div class="row">
+        <div>Freq: <span class="kbd" id="micFreq">—</span></div>
+        <div>Cents: <span class="kbd" id="micCents">—</span></div>
+        <div>Conf: <span class="kbd" id="micConf">—</span></div>
+      </div>
+      <div style="margin-top:10px">Chord guess: <span class="kbd" id="micChord">—</span></div>
+      <canvas id="micCanvas" width="900" height="180"></canvas>
+      <div class="muted" style="margin-top:6px">Top: waveform • Bottom: chroma (12 pitch classes)</div>
+    </div>
+
+    <div class="card">
+      <div class="muted">MIDI (reliable)</div>
+      <div class="big" id="midiChord">—</div>
+      <div class="muted">Active notes:</div>
+      <div id="midiNotes" class="row" style="flex-wrap:wrap"></div>
+      <div class="muted" style="margin-top:10px">Pitch classes:</div>
+      <div id="midiPC" class="pc"></div>
+    </div>
+  </div>
+
+<script>
+/* ---------------------------
+   Utilities: note + pitch class
+---------------------------- */
+const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+function midiToFreq(n){ return 440 * Math.pow(2, (n-69)/12); }
+function freqToMidi(f){ return 69 + 12*Math.log2(f/440); }
+function midiToName(n){
+  const pc = ((n%12)+12)%12;
+  const oct = Math.floor(n/12)-1;
+  return NOTE_NAMES[pc] + oct;
+}
+function pcName(pc){ return NOTE_NAMES[pc%12]; }
+function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+
+/* ---------------------------
+   Very small pitch detector (autocorrelation)
+   - Works best for monophonic input
+---------------------------- */
+function autoCorrelatePitch(timeDomain, sampleRate){
+  // timeDomain is Float32Array [-1..1]
+  const N = timeDomain.length;
+  // Remove DC offset
+  let mean = 0;
+  for (let i=0;i<N;i++) mean += timeDomain[i];
+  mean /= N;
+  let rms = 0;
+  for (let i=0;i<N;i++){
+    const v = timeDomain[i]-mean;
+    rms += v*v;
+  }
+  rms = Math.sqrt(rms / N);
+  if (rms < 0.01) return {freq: null, confidence: 0};
+
+  // Autocorrelation
+  // Lag range: 50Hz..1000Hz-ish
+  const minLag = Math.floor(sampleRate / 1000);
+  const maxLag = Math.floor(sampleRate / 50);
+
+  let bestLag = -1;
+  let bestCorr = 0;
+
+  for (let lag=minLag; lag<=maxLag; lag++){
+    let corr = 0;
+    for (let i=0; i<N-lag; i++){
+      corr += (timeDomain[i]-mean) * (timeDomain[i+lag]-mean);
+    }
+    corr /= (N-lag);
+    if (corr > bestCorr){
+      bestCorr = corr;
+      bestLag = lag;
+    }
+  }
+
+  if (bestLag < 0) return {freq: null, confidence: 0};
+
+  // crude confidence normalization
+  const confidence = clamp(bestCorr / (rms*rms + 1e-9), 0, 1);
+  const freq = sampleRate / bestLag;
+  return {freq, confidence};
+}
+
+/* ---------------------------
+   Chroma from FFT magnitudes (mic)
+   - Lightweight: sums energy into 12 pitch classes
+---------------------------- */
+function computeChromaFromFFT(freqBins, sampleRate){
+  // freqBins is Uint8Array magnitudes (0..255) from AnalyserNode.getByteFrequencyData
+  const N = freqBins.length;
+  const nyquist = sampleRate/2;
+  const chroma = new Float32Array(12);
+
+  for (let i=1; i<N; i++){
+    const mag = freqBins[i] / 255;
+    const freq = (i / N) * nyquist;
+    if (freq < 50 || freq > 5000) continue; // ignore very low/high for chord guess
+    const midi = freqToMidi(freq);
+    const pc = ((Math.round(midi) % 12) + 12) % 12;
+    chroma[pc] += mag*mag;
+  }
+
+  // normalize
+  let sum = 0;
+  for (let i=0;i<12;i++) sum += chroma[i];
+  if (sum > 0){
+    for (let i=0;i<12;i++) chroma[i] /= sum;
+  }
+  return chroma;
+}
+
+/* ---------------------------
+   Chord templates (major/minor triads + simple 7ths)
+   - Good enough for demo
+---------------------------- */
+const CHORD_TEMPLATES = [
+  {name:"maj", pcs:[0,4,7]},
+  {name:"min", pcs:[0,3,7]},
+  {name:"7",   pcs:[0,4,7,10]},
+  {name:"m7",  pcs:[0,3,7,10]},
+  {name:"maj7",pcs:[0,4,7,11]},
+  {name:"sus2",pcs:[0,2,7]},
+  {name:"sus4",pcs:[0,5,7]},
+];
+
+function scoreChordFromChroma(rootPC, tpl, chroma){
+  // sum template energy minus a small penalty for non-template energy
+  let inSum = 0;
+  let outSum = 0;
+  const inSet = new Set(tpl.pcs.map(p => (p + rootPC) % 12));
+  for (let pc=0; pc<12; pc++){
+    if (inSet.has(pc)) inSum += chroma[pc];
+    else outSum += chroma[pc];
+  }
+  return inSum - 0.35*outSum;
+}
+
+function guessChordFromChroma(chroma){
+  let best = {score:-1e9, label:"—"};
+  for (let root=0; root<12; root++){
+    for (const tpl of CHORD_TEMPLATES){
+      const s = scoreChordFromChroma(root, tpl, chroma);
+      if (s > best.score){
+        best.score = s;
+        best.label = `${pcName(root)}${tpl.name === "maj" ? "" : tpl.name}`;
+      }
+    }
+  }
+  // confidence-ish: how peaky is chroma + score
+  const peak = Math.max(...chroma);
+  const conf = clamp((best.score + peak) * 0.9, 0, 1);
+  return {label: best.label, confidence: conf};
+}
+
+/* ---------------------------
+   MIDI chord detection: from active notes
+---------------------------- */
+const activeMidiNotes = new Set();
+
+function chordFromMidiNotes(noteSet){
+  if (noteSet.size === 0) return {label:"—", pcs: new Set()};
+  // Build pitch class presence
+  const pcs = new Set();
+  for (const n of noteSet) pcs.add(((n%12)+12)%12);
+
+  // Convert to chroma-like vector (binary)
+  const chroma = new Float32Array(12);
+  pcs.forEach(pc => chroma[pc] = 1);
+  // normalize
+  let sum = 0; for (let i=0;i<12;i++) sum += chroma[i];
+  for (let i=0;i<12;i++) chroma[i] = sum ? chroma[i]/sum : 0;
+
+  const g = guessChordFromChroma(chroma);
+  return {label: g.label, pcs};
+}
+
+/* ---------------------------
+   Audio + UI wiring
+---------------------------- */
+let audioCtx = null;
+let micStream = null;
+let micSource = null;
+let analyser = null;
+let timeData = null;
+let freqData = null;
+let rafId = null;
+
+const el = (id)=>document.getElementById(id);
+
+el("btnStartAudio").onclick = async () => {
+  if (!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state !== "running") await audioCtx.resume();
+  el("btnStartAudio").textContent = "Audio Context: running";
+};
+
+el("btnMic").onclick = async () => {
+  if (!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    await audioCtx.resume();
+  }
+  if (micStream){
+    // stop
+    micStream.getTracks().forEach(t=>t.stop());
+    micStream = null;
+    if (rafId) cancelAnimationFrame(rafId);
+    el("micStatus").textContent = "Mic: off";
+    return;
+  }
+
+  micStream = await navigator.mediaDevices.getUserMedia({audio:{
+    echoCancellation:false,
+    noiseSuppression:false,
+    autoGainControl:false
+  }});
+  micSource = audioCtx.createMediaStreamSource(micStream);
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  analyser.smoothingTimeConstant = 0.6;
+  micSource.connect(analyser);
+
+  timeData = new Float32Array(analyser.fftSize);
+  freqData = new Uint8Array(analyser.frequencyBinCount);
+
+  el("micStatus").textContent = "Mic: on";
+  drawLoop();
+};
+
+function drawLoop(){
+  analyser.getFloatTimeDomainData(timeData);
+  analyser.getByteFrequencyData(freqData);
+
+  // Pitch
+  const {freq, confidence} = autoCorrelatePitch(timeData, audioCtx.sampleRate);
+  if (freq){
+    const midi = freqToMidi(freq);
+    const note = Math.round(midi);
+    const cents = Math.round((midi - note) * 100);
+    el("micNote").textContent = midiToName(note);
+    el("micFreq").textContent = `${freq.toFixed(1)} Hz`;
+    el("micCents").textContent = `${cents >= 0 ? "+" : ""}${cents}¢`;
+    el("micConf").textContent = confidence.toFixed(2);
+  } else {
+    el("micNote").textContent = "—";
+    el("micFreq").textContent = "—";
+    el("micCents").textContent = "—";
+    el("micConf").textContent = "0.00";
+  }
+
+  // Chroma + chord guess
+  const chroma = computeChromaFromFFT(freqData, audioCtx.sampleRate);
+  const chord = guessChordFromChroma(chroma);
+  el("micChord").textContent = `${chord.label} (≈${chord.confidence.toFixed(2)})`;
+
+  // Draw waveform + chroma
+  const c = el("micCanvas");
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+
+  // waveform (top half)
+  ctx.beginPath();
+  const midY = c.height * 0.30;
+  const amp = c.height * 0.22;
+  for (let i=0;i<timeData.length;i++){
+    const x = (i/(timeData.length-1))*c.width;
+    const y = midY + timeData[i]*amp;
+    if (i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // chroma bars (bottom)
+  const baseY = c.height * 0.60;
+  const barH = c.height * 0.30;
+  const w = c.width / 12;
+  for (let pc=0; pc<12; pc++){
+    const x = pc*w + 6;
+    const h = chroma[pc] * barH;
+    ctx.fillStyle = "#444";
+    ctx.fillRect(x, baseY + (barH - h), w-12, h);
+    ctx.fillStyle = "#111";
+    ctx.font = "14px system-ui";
+    ctx.fillText(NOTE_NAMES[pc], pc*w + 8, baseY + barH + 18);
+  }
+
+  rafId = requestAnimationFrame(drawLoop);
+}
+
+/* ---------------------------
+   MIDI wiring
+---------------------------- */
+let midiAccess = null;
+let midiInput = null;
+
+el("btnMidi").onclick = async () => {
+  if (!navigator.requestMIDIAccess){
+    el("midiStatus").textContent = "MIDI: not supported in this browser";
+    return;
+  }
+  midiAccess = await navigator.requestMIDIAccess();
+  el("midiStatus").textContent = "MIDI: on";
+  populateMidiInputs();
+  midiAccess.onstatechange = populateMidiInputs;
+};
+
+function populateMidiInputs(){
+  const sel = el("midiIn");
+  sel.innerHTML = "";
+  if (!midiAccess) return;
+
+  const inputs = [...midiAccess.inputs.values()];
+  if (inputs.length === 0){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No MIDI inputs found";
+    sel.appendChild(opt);
+    return;
+  }
+
+  inputs.forEach((inp, idx) => {
+    const opt = document.createElement("option");
+    opt.value = inp.id;
+    opt.textContent = inp.name || `MIDI Input ${idx+1}`;
+    sel.appendChild(opt);
+  });
+
+  sel.onchange = () => selectMidiInput(sel.value);
+  // auto-select first
+  selectMidiInput(inputs[0].id);
+  sel.value = inputs[0].id;
+}
+
+function selectMidiInput(id){
+  if (midiInput) midiInput.onmidimessage = null;
+  activeMidiNotes.clear();
+  updateMidiUI();
+
+  midiInput = midiAccess.inputs.get(id);
+  if (!midiInput) return;
+
+  midiInput.onmidimessage = (e) => {
+    const [status, data1, data2] = e.data;
+    const cmd = status & 0xF0;
+
+    // note on/off
+    if (cmd === 0x90 && data2 > 0) activeMidiNotes.add(data1);
+    if (cmd === 0x80 || (cmd === 0x90 && data2 === 0)) activeMidiNotes.delete(data1);
+
+    updateMidiUI();
+  };
+}
+
+function updateMidiUI(){
+  // notes list
+  const notes = [...activeMidiNotes].sort((a,b)=>a-b);
+  const notesDiv = el("midiNotes");
+  notesDiv.innerHTML = "";
+  notes.forEach(n=>{
+    const d = document.createElement("div");
+    d.className = "pill on";
+    d.textContent = midiToName(n);
+    notesDiv.appendChild(d);
+  });
+  if (notes.length === 0){
+    const d = document.createElement("div");
+    d.className = "muted";
+    d.textContent = "—";
+    notesDiv.appendChild(d);
+  }
+
+  // chord
+  const {label, pcs} = chordFromMidiNotes(activeMidiNotes);
+  el("midiChord").textContent = label;
+
+  // pitch classes
+  const pcDiv = el("midiPC");
+  pcDiv.innerHTML = "";
+  for (let pc=0; pc<12; pc++){
+    const d = document.createElement("div");
+    d.className = "pill " + (pcs.has(pc) ? "on" : "");
+    d.textContent = NOTE_NAMES[pc];
+    pcDiv.appendChild(d);
+  }
+}
+</script>
+</body>
+</html>
