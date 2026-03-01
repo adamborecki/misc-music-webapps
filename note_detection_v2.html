@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Live Lead Sheet — Real-Time Music Transcriber v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Music&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #111118;
+      --surface: #1a1b2e;
+      --surface2: #252740;
+      --accent: #e94560;
+      --accent2: #53c8f4;
+      --mic-color: #4a9eff;
+      --midi-color: #e94560;
+      --text: #eaeaea;
+      --muted: #7a7f98;
+      --border: #2e3050;
+      --staff-bg: #fefcf5;
+      --staff-line: #666;
+      --playhead: rgba(233,69,96,0.55);
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* ---- Toolbar ---- */
+    .toolbar {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      padding: 10px 14px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .toolbar .group { display: flex; gap: 6px; align-items: center; }
+    .toolbar .sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+    button {
+      font-size: 12px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px;
+      cursor: pointer; font-weight: 600; background: var(--surface2); color: var(--text);
+      transition: all 0.12s;
+    }
+    button:hover { border-color: var(--accent2); }
+    button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    select {
+      font-size: 12px; padding: 5px 8px; border-radius: 6px;
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    }
+    .lbl { font-size: 11px; color: var(--muted); }
+    input[type=range] {
+      width: 80px; accent-color: var(--accent2); vertical-align: middle;
+    }
+
+    /* ---- Main canvas area ---- */
+    .canvas-wrap {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    canvas { display: block; width: 100%; }
+    #spectroCanvas { height: 80px; flex-shrink: 0; }
+    #staffCanvas   { flex: 1; min-height: 140px; }
+
+    /* ---- Footer readout ---- */
+    .footer {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      padding: 8px 14px;
+      background: var(--surface); border-top: 1px solid var(--border);
+      flex-shrink: 0; font-size: 12px;
+    }
+    .footer .note-now {
+      font-size: 22px; font-weight: 800; min-width: 48px;
+    }
+    .footer .chord-now {
+      font-size: 18px; font-weight: 700; color: var(--accent);
+      min-width: 56px;
+    }
+    .footer .tag {
+      padding: 2px 7px; border-radius: 5px; background: var(--surface2);
+      font-family: ui-monospace, monospace; font-size: 11px;
+    }
+    .footer .speed-display { color: var(--muted); }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 600px) {
+      #spectroCanvas { height: 50px; }
+      .footer .tag { display: none; }
+      .toolbar { padding: 8px 10px; gap: 6px; }
+      button { padding: 5px 9px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="group">
+      <button id="btnMic">Mic</button>
+      <span id="micStatus" class="lbl">off</span>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+      <button id="btnMidi">MIDI</button>
+      <select id="midiIn"><option>—</option></select>
+      <span id="midiStatus" class="lbl">off</span>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+      <span class="lbl">Speed</span>
+      <input type="range" id="speedSlider" min="0.3" max="2.5" step="0.1" value="1.0" />
+      <span id="speedLabel" class="lbl">1.0×</span>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+      <label class="lbl"><input type="checkbox" id="showBass" checked /> Bass clef</label>
+    </div>
+    <button id="btnClear" style="margin-left:auto; background:transparent; border-color:var(--border); color:var(--muted); font-size:11px;">Clear</button>
+  </div>
+
+  <!-- Canvases -->
+  <div class="canvas-wrap">
+    <canvas id="spectroCanvas"></canvas>
+    <canvas id="staffCanvas"></canvas>
+  </div>
+
+  <!-- Footer readout -->
+  <div class="footer">
+    <div class="note-now" id="footNote" style="color:var(--accent2)">—</div>
+    <div class="chord-now" id="footChord">—</div>
+    <span class="tag" id="footFreq">— Hz</span>
+    <span class="tag" id="footCents">±0¢</span>
+    <span class="tag" id="footConf">conf —</span>
+    <span class="speed-display" id="footSpeed" style="margin-left:auto;">40 px/s</span>
+  </div>
+
+<script>
+/* =============================================================
+   UTILITIES
+============================================================= */
+const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const DIATONIC   = [0,0,1,1,2,3,3,4,4,5,5,6]; // semitone → diatonic step
+function midiToFreq(n){ return 440*Math.pow(2,(n-69)/12); }
+function freqToMidi(f){ return 69+12*Math.log2(f/440); }
+function midiToName(n){ return NOTE_NAMES[((n%12)+12)%12]+(Math.floor(n/12)-1); }
+function pcName(pc){ return NOTE_NAMES[((pc%12)+12)%12]; }
+function clamp(x,lo,hi){ return Math.max(lo,Math.min(hi,x)); }
+const el = id => document.getElementById(id);
+
+/* =============================================================
+   PITCH DETECTION  (autocorrelation — reused from v1)
+============================================================= */
+function detectPitch(td, sr){
+  const N=td.length;
+  let mean=0; for(let i=0;i<N;i++) mean+=td[i]; mean/=N;
+  let rms=0; for(let i=0;i<N;i++){const v=td[i]-mean; rms+=v*v;} rms=Math.sqrt(rms/N);
+  if(rms<0.01) return {freq:null, confidence:0};
+  const minL=Math.floor(sr/1000), maxL=Math.floor(sr/50);
+  let bL=-1, bC=0;
+  for(let l=minL;l<=maxL;l++){
+    let c=0; for(let i=0;i<N-l;i++) c+=(td[i]-mean)*(td[i+l]-mean);
+    c/=(N-l);
+    if(c>bC){bC=c;bL=l;}
+  }
+  if(bL<0) return {freq:null,confidence:0};
+  return {freq:sr/bL, confidence:clamp(bC/(rms*rms+1e-9),0,1)};
+}
+
+/* =============================================================
+   CHROMA + CHORD GUESSING  (reused from v1)
+============================================================= */
+function chromaFromFFT(bins, sr){
+  const N=bins.length, ny=sr/2, ch=new Float32Array(12);
+  for(let i=1;i<N;i++){
+    const m=bins[i]/255, f=(i/N)*ny;
+    if(f<50||f>5000) continue;
+    ch[((Math.round(freqToMidi(f))%12)+12)%12]+=m*m;
+  }
+  let s=0; for(let i=0;i<12;i++) s+=ch[i];
+  if(s>0) for(let i=0;i<12;i++) ch[i]/=s;
+  return ch;
+}
+const TEMPLATES=[
+  {n:"",p:[0,4,7]},{n:"m",p:[0,3,7]},{n:"7",p:[0,4,7,10]},{n:"m7",p:[0,3,7,10]},
+  {n:"maj7",p:[0,4,7,11]},{n:"sus2",p:[0,2,7]},{n:"sus4",p:[0,5,7]},
+  {n:"dim",p:[0,3,6]},{n:"aug",p:[0,4,8]},{n:"6",p:[0,4,7,9]},{n:"m6",p:[0,3,7,9]},
+];
+function guessChord(ch){
+  let best={s:-1e9,l:"—"};
+  for(let r=0;r<12;r++) for(const t of TEMPLATES){
+    const ins=new Set(t.p.map(p=>(p+r)%12));
+    let i=0,o=0;
+    for(let pc=0;pc<12;pc++) ins.has(pc)?i+=ch[pc]:o+=ch[pc];
+    const s=i-0.35*o;
+    if(s>best.s) best={s,l:pcName(r)+t.n};
+  }
+  return best.l;
+}
+function chordFromMidi(noteSet){
+  if(!noteSet.size) return "—";
+  const ch=new Float32Array(12);
+  for(const n of noteSet) ch[((n%12)+12)%12]=1;
+  let s=0; for(let i=0;i<12;i++) s+=ch[i];
+  for(let i=0;i<12;i++) ch[i]=s?ch[i]/s:0;
+  return guessChord(ch);
+}
+
+/* =============================================================
+   NOTE MANAGER
+   Each note: {midi, source:'mic'|'midi', onset, offset, chordLabel}
+   onset/offset in seconds (performance.now()/1000 based)
+============================================================= */
+const notes = [];      // all tracked notes
+const chordEvents = []; // {t, label}  — chord changes over time
+
+function now(){ return performance.now()/1000; }
+
+// --- Mic note tracking (with stabilization) ---
+let currentMicNote = null; // reference into notes[]
+let candidateMidi = null;  // pitch we're checking for stability
+let candidateCount = 0;    // frames at this pitch
+const STABLE_FRAMES = 4;   // require N consecutive frames at same pitch (±0) before committing
+
+function micNoteOn(midi){
+  // If this is the same note currently sounding, just keep it
+  if(currentMicNote && currentMicNote.midi === midi){
+    candidateMidi = midi;
+    candidateCount = STABLE_FRAMES; // stay stable
+    return;
+  }
+  // If pitch matches candidate, increment stability counter
+  if(midi === candidateMidi){
+    candidateCount++;
+  } else {
+    // New candidate — start counting
+    candidateMidi = midi;
+    candidateCount = 1;
+  }
+  // Only commit when stable
+  if(candidateCount >= STABLE_FRAMES){
+    micNoteOff(); // close previous
+    const n = {midi, source:'mic', onset:now(), offset:null};
+    notes.push(n);
+    currentMicNote = n;
+  }
+}
+function micNoteOff(){
+  if(currentMicNote){
+    currentMicNote.offset = now();
+    currentMicNote = null;
+  }
+  candidateMidi = null;
+  candidateCount = 0;
+}
+
+// --- MIDI note tracking ---
+const openMidiNotes = new Map(); // midi# → note ref
+function midiNoteOn(midi){
+  if(openMidiNotes.has(midi)) return;
+  const n = {midi, source:'midi', onset:now(), offset:null};
+  notes.push(n);
+  openMidiNotes.set(midi, n);
+}
+function midiNoteOff(midi){
+  const n = openMidiNotes.get(midi);
+  if(n){ n.offset = now(); openMidiNotes.delete(midi); }
+}
+
+// --- Chord tracking (debounced — min 800ms between changes) ---
+let lastChordLabel = null;
+let lastChordTime = 0;
+const CHORD_MIN_INTERVAL = 0.8; // seconds
+let pendingChord = null;
+let pendingChordCount = 0;
+const CHORD_STABLE_FRAMES = 6; // require ~6 frames of same chord before committing
+
+function pushChord(label){
+  if(label === "—") return;
+  if(label === lastChordLabel){ pendingChord = null; pendingChordCount = 0; return; }
+  const t = now();
+  if(t - lastChordTime < CHORD_MIN_INTERVAL) return;
+  // Require stability
+  if(label === pendingChord){
+    pendingChordCount++;
+  } else {
+    pendingChord = label;
+    pendingChordCount = 1;
+  }
+  if(pendingChordCount >= CHORD_STABLE_FRAMES){
+    lastChordLabel = label;
+    lastChordTime = t;
+    chordEvents.push({t, label});
+    pendingChord = null;
+    pendingChordCount = 0;
+  }
+}
+
+// --- Cull old notes ---
+function cullBefore(t){
+  while(notes.length > 0 && (notes[0].offset||notes[0].onset) < t) notes.shift();
+  while(chordEvents.length > 1 && chordEvents[1].t < t) chordEvents.shift();
+}
+
+function clearAll(){
+  notes.length = 0; chordEvents.length = 0;
+  currentMicNote = null; openMidiNotes.clear();
+  lastChordLabel = null;
+}
+el("btnClear").onclick = clearAll;
+
+/* =============================================================
+   ADAPTIVE SCROLL SPEED
+   Measures note density → smoothly adjusts px/sec
+============================================================= */
+const BASE_SPEED = 42;  // px/sec at 1.0× multiplier
+let scrollSpeed = BASE_SPEED;
+let userSpeedMul = 1.0;
+
+el("speedSlider").oninput = e => {
+  userSpeedMul = +e.target.value;
+  el("speedLabel").textContent = userSpeedMul.toFixed(1)+"×";
+};
+
+function adaptSpeed(){
+  const t = now();
+  // Count note onsets in last 3 seconds
+  let count = 0;
+  for(let i=notes.length-1; i>=0; i--){
+    if(notes[i].onset < t-3) break;
+    count++;
+  }
+  const density = count / 3; // notes per second
+
+  let target = BASE_SPEED * userSpeedMul;
+  if(density > 3)      target *= 0.55;  // dense → slow down a lot
+  else if(density > 1.5) target *= 0.75; // moderate
+  else if(density < 0.3) target *= 1.4;  // sparse → speed up
+
+  target = clamp(target, 15, 100);
+  // Smooth lerp
+  scrollSpeed += (target - scrollSpeed) * 0.025;
+}
+
+/* =============================================================
+   SPECTROGRAM RENDERER
+   Offscreen buffer, push one column per frame, scroll in sync
+============================================================= */
+let spectroBuffer = null;  // offscreen canvas
+let spectroW = 0, spectroH = 0;
+let spectroCol = 0;
+
+function initSpectro(w, h){
+  spectroW = w; spectroH = h;
+  spectroBuffer = new OffscreenCanvas(w, h);
+  const ctx = spectroBuffer.getContext("2d");
+  ctx.fillStyle = "#0a0a14";
+  ctx.fillRect(0,0,w,h);
+  spectroCol = 0;
+}
+
+// Color ramp: dark → purple → blue → cyan → yellow → white
+function spectroColor(v){ // v 0..1
+  v = clamp(v, 0, 1);
+  if(v < 0.15) return [10+v*80, 8, 20+v*120];
+  if(v < 0.4)  { const t=(v-0.15)/0.25; return [18+t*10, 20+t*80, 38+t*170]; }
+  if(v < 0.65) { const t=(v-0.4)/0.25; return [28-t*20, 100+t*155, 208+t*47]; }
+  if(v < 0.85) { const t=(v-0.65)/0.2; return [8+t*247, 255, 255-t*200]; }
+  { const t=(v-0.85)/0.15; return [255, 255, 55+t*200]; }
+}
+
+function pushSpectroColumn(freqBins, sr){
+  if(!spectroBuffer || !freqBins) return;
+  const ctx = spectroBuffer.getContext("2d");
+  const N = freqBins.length;
+  const ny = sr/2;
+
+  // Shift existing image left by 1px
+  const imgData = ctx.getImageData(1, 0, spectroW-1, spectroH);
+  ctx.putImageData(imgData, 0, 0);
+
+  // Draw new column at right edge
+  // Map freq 60Hz–4000Hz log-scale to y
+  const fMin = 60, fMax = 4000;
+  const logMin = Math.log2(fMin), logMax = Math.log2(fMax);
+
+  for(let py=0; py<spectroH; py++){
+    const frac = 1 - py/spectroH; // 0=bottom, 1=top
+    const logF = logMin + frac*(logMax-logMin);
+    const freq = Math.pow(2, logF);
+    const bin = Math.round((freq/ny)*N);
+    const mag = bin >= 0 && bin < N ? freqBins[bin]/255 : 0;
+    // Boost contrast
+    const v = Math.pow(mag, 0.6);
+    const [r,g,b] = spectroColor(v);
+    ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+    ctx.fillRect(spectroW-1, py, 1, 1);
+  }
+}
+
+/* =============================================================
+   STAFF RENDERER — continuous time-scrolling
+   Draws onto staffCanvas every frame
+============================================================= */
+let showBass = true;
+el("showBass").onchange = e => { showBass = e.target.checked; };
+
+function midiToStaffY(midi, trebleBaseY, lineGap){
+  // Diatonic slot: C=0,D=1,E=2,F=3,G=4,A=5,B=6 per octave
+  const oct = Math.floor(midi/12)-1;
+  const pc  = ((midi%12)+12)%12;
+  const slot = oct*7 + DIATONIC[pc];
+  // E4 (midi 64) = treble bottom line → slot 4*7+2=30
+  const E4slot = 30;
+  const slotH = lineGap / 2;
+  return trebleBaseY + (E4slot - slot) * slotH;
+}
+
+/* --- Clef symbols via Noto Music web font --- */
+const MUSIC_FONT = "'Noto Music', 'Noto Sans Symbols2', 'Segoe UI Symbol', serif";
+const TREBLE_CLEF = '\uD834\uDD1E'; // U+1D11E 𝄞
+const BASS_CLEF   = '\uD834\uDD22'; // U+1D122 𝄢
+
+function drawTrebleClef(ctx, x, trebleBase, lg){
+  ctx.save();
+  ctx.fillStyle = "#444";
+  ctx.font = `${lg * 5.5}px ${MUSIC_FONT}`;
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+  ctx.fillText(TREBLE_CLEF, x - lg*0.2, trebleBase + lg*1.05);
+  ctx.restore();
+}
+function drawBassClef(ctx, x, bassBase, lg){
+  ctx.save();
+  ctx.fillStyle = "#444";
+  ctx.font = `${lg * 3.5}px ${MUSIC_FONT}`;
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+  ctx.fillText(BASS_CLEF, x - lg*0.1, bassBase - lg*0.65);
+  ctx.restore();
+}
+
+function drawFrame(){
+  const tNow = now();
+  adaptSpeed();
+
+  // --- Spectrogram canvas ---
+  const sc = el("spectroCanvas");
+  const sRect = sc.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  if(sc.width !== Math.round(sRect.width*dpr) || sc.height !== Math.round(sRect.height*dpr)){
+    sc.width = Math.round(sRect.width*dpr);
+    sc.height = Math.round(sRect.height*dpr);
+    initSpectro(sc.width, sc.height);
+  }
+  // Blit spectrogram buffer
+  if(spectroBuffer){
+    const sctx = sc.getContext("2d");
+    sctx.drawImage(spectroBuffer, 0, 0);
+    // Playhead on spectrogram
+    const phX = sc.width * 0.82;
+    sctx.strokeStyle = "rgba(233,69,96,0.5)";
+    sctx.lineWidth = dpr;
+    sctx.setLineDash([4*dpr, 4*dpr]);
+    sctx.beginPath(); sctx.moveTo(phX, 0); sctx.lineTo(phX, sc.height); sctx.stroke();
+    sctx.setLineDash([]);
+  }
+
+  // --- Staff canvas ---
+  const mc = el("staffCanvas");
+  const mRect = mc.getBoundingClientRect();
+  const cW = Math.round(mRect.width * dpr);
+  const cH = Math.round(mRect.height * dpr);
+  if(mc.width !== cW || mc.height !== cH){
+    mc.width = cW; mc.height = cH;
+  }
+  const ctx = mc.getContext("2d");
+  ctx.save();
+  ctx.scale(dpr, dpr);
+
+  const W = mRect.width;
+  const H = mRect.height;
+
+  // Clear
+  ctx.fillStyle = "#fefcf5";
+  ctx.fillRect(0, 0, W, H);
+
+  // Layout constants
+  const CLEF_W = 40;      // left margin for clef
+  const RIGHT_PAD = 6;
+  const staffW = W - CLEF_W - RIGHT_PAD;
+  const PLAYHEAD_FRAC = 0.82; // "now" is 82% from left
+  const phX = CLEF_W + staffW * PLAYHEAD_FRAC;
+
+  // Time window: how many seconds are visible
+  const visibleSec = staffW / scrollSpeed;
+  const tLeft  = tNow - visibleSec * PLAYHEAD_FRAC;  // time at left edge
+  const tRight = tNow + visibleSec * (1 - PLAYHEAD_FRAC); // time at right edge (future)
+
+  // Time → X helper
+  const timeToX = t => CLEF_W + ((t - tLeft) / visibleSec) * staffW;
+
+  // Staff geometry
+  const lineGap = clamp(Math.round(H * (showBass ? 0.057 : 0.072)), 8, 18);
+  const slotH = lineGap / 2;
+
+  // Treble staff: 5 lines
+  // When bass hidden, center the treble system (chord area + staff + room for ledger lines)
+  const trebleStaffH = 4 * lineGap; // height of 5 lines
+  const treblePad = showBass
+    ? H * 0.12
+    : Math.max(lineGap * 3, (H - trebleStaffH) * 0.33); // center-ish with room above for chords & high notes
+  const trebleBase = treblePad + 4 * lineGap; // bottom line (E4)
+  const trebleTop  = treblePad;                // top line (F5)
+
+  // Bass staff (optional)
+  const bassGap = lineGap * 2.5;
+  const bassTopLine = trebleBase + bassGap;
+  const bassBase = bassTopLine + 4 * lineGap; // bottom line (G2)
+
+  // Chord area: above treble
+  const chordY = treblePad - lineGap * 1.6;
+
+  // --- Draw staff lines ---
+  ctx.strokeStyle = "#999";
+  ctx.lineWidth = 0.8;
+  for(let i=0;i<5;i++){
+    const y = trebleBase - i*lineGap;
+    ctx.beginPath(); ctx.moveTo(CLEF_W, y); ctx.lineTo(CLEF_W+staffW, y); ctx.stroke();
+  }
+  if(showBass){
+    for(let i=0;i<5;i++){
+      const y = bassBase - i*lineGap;
+      ctx.beginPath(); ctx.moveTo(CLEF_W, y); ctx.lineTo(CLEF_W+staffW, y); ctx.stroke();
+    }
+  }
+
+  // --- Clef symbols (drawn as paths for cross-platform consistency) ---
+  drawTrebleClef(ctx, 6, trebleBase, lineGap);
+  if(showBass){
+    drawBassClef(ctx, 6, bassBase, lineGap);
+  }
+
+  // --- Playhead ---
+  ctx.strokeStyle = "rgba(233,69,96,0.35)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6,4]);
+  ctx.beginPath();
+  ctx.moveTo(phX, 0);
+  ctx.lineTo(phX, H);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // "NOW" label
+  ctx.fillStyle = "rgba(233,69,96,0.6)";
+  ctx.font = "bold 9px system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillText("NOW", phX, 2);
+
+  // --- Draw chord symbols ---
+  ctx.textBaseline = "bottom";
+  ctx.font = `bold ${clamp(lineGap*1.3, 12, 22)}px system-ui`;
+  for(let i=0; i<chordEvents.length; i++){
+    const ce = chordEvents[i];
+    const x = timeToX(ce.t);
+    if(x > W + 60) break;
+    if(x < CLEF_W - 60) continue;
+    // Only draw if this chord is still "active" (no next chord yet, or next chord is later)
+    const nextT = i+1 < chordEvents.length ? chordEvents[i+1].t : tRight;
+    const endX = timeToX(Math.min(nextT, tRight));
+
+    // Subtle background band
+    ctx.fillStyle = "rgba(233,69,96,0.05)";
+    ctx.fillRect(Math.max(x, CLEF_W), chordY - lineGap*0.8, endX - Math.max(x, CLEF_W), lineGap*1.6);
+
+    // Chord text
+    ctx.fillStyle = "#c44";
+    ctx.textAlign = "left";
+    ctx.fillText(ce.label, Math.max(x + 4, CLEF_W + 2), chordY + lineGap*0.5);
+  }
+
+  // --- Draw notes ---
+  const noteR = clamp(slotH * 1.3, 4, 9);
+
+  for(const n of notes){
+    const onset = n.onset;
+    const offset = n.offset || tNow; // open note → extends to now
+    const x1 = timeToX(onset);
+    const x2 = timeToX(offset);
+
+    // Off-screen check
+    if(x2 < CLEF_W - 10) continue;
+    if(x1 > W + 10) continue;
+
+    const y = midiToStaffY(n.midi, trebleBase, lineGap);
+
+    // Skip bass range notes if bass clef hidden and they're way below treble
+    if(!showBass && y > trebleBase + lineGap * 4) continue;
+
+    const isMic = n.source === 'mic';
+    const baseR = isMic ? 74 : 233;
+    const baseG = isMic ? 158 : 69;
+    const baseB = isMic ? 255 : 96;
+
+    const isOpen = !n.offset;
+    const alpha = isOpen ? 1.0 : clamp(1 - (tNow - offset)*0.3, 0.25, 0.9);
+
+    // --- Ledger lines ---
+    ctx.strokeStyle = `rgba(100,100,100,${alpha})`;
+    ctx.lineWidth = 0.8;
+    const ledgerW = noteR * 3;
+    const noteX = Math.max(x1, CLEF_W);
+
+    // Above treble
+    if(y < trebleTop - 1){
+      for(let ly = trebleTop - lineGap; ly >= y - 1; ly -= lineGap){
+        ctx.beginPath(); ctx.moveTo(noteX-ledgerW/2, ly); ctx.lineTo(noteX+ledgerW/2, ly); ctx.stroke();
+      }
+    }
+    // Below treble (middle C area)
+    if(y > trebleBase + 1 && (!showBass || y < bassTopLine - lineGap)){
+      for(let ly = trebleBase + lineGap; ly <= y + 1; ly += lineGap){
+        ctx.beginPath(); ctx.moveTo(noteX-ledgerW/2, ly); ctx.lineTo(noteX+ledgerW/2, ly); ctx.stroke();
+      }
+    }
+    if(showBass){
+      // Above bass
+      if(y < bassTopLine - 1 && y > trebleBase + lineGap * 2){
+        for(let ly = bassTopLine + lineGap; ly >= y - 1; ly -= lineGap){
+          // only between staves
+        }
+      }
+      // Below bass
+      if(y > bassBase + 1){
+        for(let ly = bassBase + lineGap; ly <= y + 1; ly += lineGap){
+          ctx.beginPath(); ctx.moveTo(noteX-ledgerW/2, ly); ctx.lineTo(noteX+ledgerW/2, ly); ctx.stroke();
+        }
+      }
+    }
+
+    // --- Duration bar (tie line) ---
+    const barX1 = Math.max(x1, CLEF_W);
+    const barX2 = Math.min(x2, W);
+    if(barX2 - barX1 > 2){
+      ctx.fillStyle = `rgba(${baseR},${baseG},${baseB},${alpha*0.35})`;
+      const barH = noteR * 1.4;
+      ctx.beginPath();
+      ctx.roundRect(barX1, y - barH/2, barX2 - barX1, barH, barH/2);
+      ctx.fill();
+    }
+
+    // --- Note head ---
+    const headX = Math.max(x1, CLEF_W);
+    ctx.fillStyle = `rgba(${baseR},${baseG},${baseB},${alpha})`;
+    ctx.beginPath();
+    ctx.ellipse(headX, y, noteR * 1.2, noteR * 0.82, -0.2, 0, Math.PI*2);
+    ctx.fill();
+
+    // Outline for open (ringing) notes
+    if(isOpen){
+      ctx.strokeStyle = `rgba(${baseR},${baseG},${baseB},0.8)`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Glow
+      ctx.shadowColor = `rgba(${baseR},${baseG},${baseB},0.4)`;
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // --- Note name for currently open notes near playhead ---
+    if(isOpen && Math.abs(headX - phX) < staffW * 0.25){
+      ctx.fillStyle = `rgba(${baseR},${baseG},${baseB},1)`;
+      ctx.font = `bold ${clamp(noteR*1.4, 8, 13)}px system-ui`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(midiToName(n.midi), headX, y - noteR - 3);
+    }
+  }
+
+  // --- Placeholder text ---
+  if(notes.length === 0){
+    ctx.fillStyle = "#bbb";
+    ctx.font = "14px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Enable mic or MIDI and play something…", W/2, H/2);
+  }
+
+  // --- Time markers (subtle) ---
+  ctx.fillStyle = "#ccc";
+  ctx.font = "9px system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  const secStep = visibleSec > 15 ? 5 : visibleSec > 6 ? 2 : 1;
+  const firstSec = Math.ceil(tLeft / secStep) * secStep;
+  for(let t = firstSec; t < tRight; t += secStep){
+    const x = timeToX(t);
+    if(x < CLEF_W + 20 || x > W - 10) continue;
+    ctx.fillText(`${(t - tNow).toFixed(0)}s`, x, H - 2);
+  }
+
+  ctx.restore();
+
+  // --- Cull off-screen notes ---
+  cullBefore(tLeft - 2);
+
+  // --- Footer ---
+  el("footSpeed").textContent = `${scrollSpeed.toFixed(0)} px/s`;
+
+  requestAnimationFrame(drawFrame);
+}
+
+/* =============================================================
+   AUDIO / MIC
+============================================================= */
+let audioCtx = null, micStream = null, analyser = null;
+let timeData = null, freqData = null;
+let lastMicMidi = null;
+
+async function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state !== "running") await audioCtx.resume();
+}
+
+el("btnMic").onclick = async () => {
+  await ensureAudio();
+  if(micStream){
+    micStream.getTracks().forEach(t=>t.stop()); micStream = null;
+    el("btnMic").classList.remove("on");
+    el("micStatus").textContent = "off";
+    micNoteOff();
+    return;
+  }
+  micStream = await navigator.mediaDevices.getUserMedia({audio:{
+    echoCancellation:false, noiseSuppression:false, autoGainControl:false
+  }});
+  const src = audioCtx.createMediaStreamSource(micStream);
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  analyser.smoothingTimeConstant = 0.65;
+  src.connect(analyser);
+  timeData = new Float32Array(analyser.fftSize);
+  freqData = new Uint8Array(analyser.frequencyBinCount);
+  el("btnMic").classList.add("on");
+  el("micStatus").textContent = "on";
+  micLoop();
+};
+
+function micLoop(){
+  if(!micStream) return;
+  analyser.getFloatTimeDomainData(timeData);
+  analyser.getByteFrequencyData(freqData);
+
+  // Push spectrogram column
+  pushSpectroColumn(freqData, audioCtx.sampleRate);
+
+  // Pitch detection
+  const {freq, confidence} = detectPitch(timeData, audioCtx.sampleRate);
+  if(freq && confidence > 0.88){
+    const rawMidi = freqToMidi(freq);
+    const midi = Math.round(rawMidi);
+    const cents = Math.round((rawMidi - midi) * 100);
+
+    el("footNote").textContent = midiToName(midi);
+    el("footFreq").textContent = `${freq.toFixed(1)} Hz`;
+    el("footCents").textContent = `${cents>=0?"+":""}${cents}¢`;
+    el("footConf").textContent = `conf ${confidence.toFixed(2)}`;
+
+    micNoteOn(midi);
+    lastMicMidi = midi;
+  } else {
+    el("footNote").textContent = "—";
+    el("footFreq").textContent = "— Hz";
+    el("footCents").textContent = "±0¢";
+    el("footConf").textContent = "conf —";
+    if(confidence < 0.25){
+      micNoteOff();
+      lastMicMidi = null;
+    }
+  }
+
+  // Chord from chroma
+  const ch = chromaFromFFT(freqData, audioCtx.sampleRate);
+  const chordLabel = guessChord(ch);
+  // Only push if enough energy
+  let energy = 0; for(let i=0;i<12;i++) energy += ch[i];
+  if(energy > 0.01) pushChord(chordLabel);
+  el("footChord").textContent = lastChordLabel || "—";
+
+  requestAnimationFrame(micLoop);
+}
+
+/* =============================================================
+   MIDI
+============================================================= */
+const activeMidiNotes = new Set();
+let midiAccess = null, midiInput = null;
+
+el("btnMidi").onclick = async () => {
+  if(!navigator.requestMIDIAccess){
+    el("midiStatus").textContent = "unsupported";
+    return;
+  }
+  midiAccess = await navigator.requestMIDIAccess();
+  el("btnMidi").classList.add("on");
+  el("midiStatus").textContent = "on";
+  populateMidi();
+  midiAccess.onstatechange = populateMidi;
+};
+
+function populateMidi(){
+  const sel = el("midiIn"); sel.innerHTML = "";
+  if(!midiAccess) return;
+  const inputs = [...midiAccess.inputs.values()];
+  if(!inputs.length){ sel.innerHTML='<option>No inputs</option>'; return; }
+  inputs.forEach((inp,i) => {
+    const o = document.createElement("option");
+    o.value = inp.id; o.textContent = inp.name || `MIDI ${i+1}`;
+    sel.appendChild(o);
+  });
+  sel.onchange = () => selectMidi(sel.value);
+  selectMidi(inputs[0].id); sel.value = inputs[0].id;
+}
+
+function selectMidi(id){
+  if(midiInput) midiInput.onmidimessage = null;
+  activeMidiNotes.clear();
+  midiInput = midiAccess.inputs.get(id);
+  if(!midiInput) return;
+  midiInput.onmidimessage = e => {
+    const [status,d1,d2] = e.data;
+    const cmd = status & 0xF0;
+    if(cmd===0x90 && d2>0){
+      activeMidiNotes.add(d1);
+      midiNoteOn(d1);
+    }
+    if(cmd===0x80 || (cmd===0x90 && d2===0)){
+      activeMidiNotes.delete(d1);
+      midiNoteOff(d1);
+    }
+    // Update chord from MIDI
+    const label = chordFromMidi(activeMidiNotes);
+    pushChord(label);
+    el("footChord").textContent = lastChordLabel || "—";
+    // Show current MIDI note in footer if no mic
+    if(!micStream && activeMidiNotes.size > 0){
+      const highest = Math.max(...activeMidiNotes);
+      el("footNote").textContent = midiToName(highest);
+      el("footNote").style.color = "var(--midi-color)";
+    }
+  };
+}
+
+/* =============================================================
+   INIT
+============================================================= */
+// Auto-hide bass clef on mobile for better readability (initial load only)
+if(window.innerWidth < 600){
+  el("showBass").checked = false;
+  showBass = false;
+}
+
+requestAnimationFrame(drawFrame);
+</script>
+</body>
+</html>
