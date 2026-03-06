@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f7fb" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a1220" />
+  <title>Misc Music Webapps</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --bg-soft: #ffffff;
+      --card: rgba(255, 255, 255, 0.9);
+      --text: #10213a;
+      --muted: #4d6485;
+      --line: rgba(16, 33, 58, 0.14);
+      --accent: #0075ff;
+      --accent-2: #00b6a9;
+      --shadow: 0 14px 38px rgba(16, 33, 58, 0.14);
+      --radius: 18px;
+      --maxw: 1024px;
+      --font-display: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      --font-body: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a1220;
+        --bg-soft: #0f1b2e;
+        --card: rgba(18, 30, 49, 0.88);
+        --text: #ecf3ff;
+        --muted: #9db4d7;
+        --line: rgba(236, 243, 255, 0.14);
+        --accent: #61a7ff;
+        --accent-2: #55dbc4;
+        --shadow: 0 22px 56px rgba(0, 0, 0, 0.44);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+    }
+
+    body {
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: 1.45;
+      background:
+        radial-gradient(950px 500px at 5% 0%, color-mix(in oklab, var(--accent), transparent 83%), transparent 55%),
+        radial-gradient(900px 500px at 100% 10%, color-mix(in oklab, var(--accent-2), transparent 80%), transparent 58%),
+        linear-gradient(180deg, var(--bg), var(--bg-soft));
+    }
+
+    .shell {
+      width: min(var(--maxw), 100% - 28px);
+      margin: 24px auto 36px;
+    }
+
+    .hero {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0.35rem 0 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.55rem, 1rem + 2.2vw, 2.4rem);
+      line-height: 1.1;
+    }
+
+    .sub {
+      margin: 0.8rem 0 0;
+      color: var(--muted);
+      max-width: 64ch;
+    }
+
+    .meta {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: color-mix(in oklab, var(--card), transparent 10%);
+    }
+
+    .grid {
+      margin-top: 18px;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      min-height: 180px;
+      overflow: hidden;
+      transition: transform 0.17s ease, border-color 0.17s ease;
+    }
+
+    .card:hover,
+    .card:focus-within {
+      transform: translateY(-2px);
+      border-color: color-mix(in oklab, var(--accent), var(--line) 45%);
+    }
+
+    .card-top {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .card-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.03rem;
+      line-height: 1.2;
+    }
+
+    .card-path {
+      margin-top: 0.38rem;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.78rem;
+      word-break: break-word;
+    }
+
+    .card-main {
+      padding: 12px 14px 14px;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .open-link {
+      align-self: flex-start;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: color-mix(in oklab, var(--accent), transparent 88%);
+      transition: background 0.17s ease, border-color 0.17s ease;
+    }
+
+    .open-link:hover,
+    .open-link:focus-visible {
+      border-color: color-mix(in oklab, var(--accent), var(--line) 40%);
+      background: color-mix(in oklab, var(--accent), transparent 80%);
+      outline: none;
+    }
+
+    .muted-row {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .muted-row a {
+      color: inherit;
+    }
+
+    .state {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      min-height: 1.2em;
+    }
+
+    @media (max-width: 600px) {
+      .shell {
+        width: min(var(--maxw), 100% - 20px);
+        margin-top: 16px;
+      }
+
+      .hero {
+        padding: 16px;
+      }
+
+      .grid {
+        margin-top: 14px;
+        gap: 10px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card,
+      .open-link {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Index</p>
+      <h1>misc-music-webapps</h1>
+      <p class="sub">This page lists and links all HTML apps found in the repository.</p>
+      <div class="meta">
+        <span class="pill" id="countPill">Loading apps...</span>
+        <span class="pill" id="themePill">Theme: auto (system)</span>
+      </div>
+      <div class="state" id="stateText"></div>
+    </section>
+
+    <section class="grid" id="appsGrid" aria-live="polite"></section>
+
+    <section class="muted-row">
+      <span>See also:</span>
+      <a href="https://adamborecki.github.io/misc-tech-webapps/" target="_blank" rel="noopener noreferrer">misc-tech-webapps</a>
+      <a href="https://adamborecki.github.io/webapps" target="_blank" rel="noopener noreferrer">webapps</a>
+    </section>
+  </main>
+
+  <script>
+    const fallbackAppData = [
+      { path: "common_key_finder.html", description: "Find shared musical keys from selected notes and pitch classes." },
+      { path: "note_detection.html", description: "Realtime pitch and chord detection demo using microphone and MIDI input." },
+      { path: "note_detection_v2.html", description: "Lead-sheet style transcriber with live note, chord, and staff rendering." },
+      { path: "uke_chord_buddy.html", description: "Explore grouped ukulele chords with fast mobile-friendly controls." }
+    ];
+
+    const appsGrid = document.getElementById("appsGrid");
+    const stateText = document.getElementById("stateText");
+    const countPill = document.getElementById("countPill");
+    const themePill = document.getElementById("themePill");
+
+    function humanizeFilename(path) {
+      const lastPart = path.split("/").pop() || path;
+      const base = lastPart.replace(/\.html?$/i, "");
+      return base
+        .replace(/[_-]+/g, " ")
+        .replace(/\b\w/g, (match) => match.toUpperCase());
+    }
+
+    function repoContextFromLocation() {
+      if (!location.hostname.endsWith(".github.io")) return null;
+      const owner = location.hostname.replace(".github.io", "");
+      const firstPathSegment = location.pathname.split("/").filter(Boolean)[0];
+      if (!owner || !firstPathSegment) return null;
+      return { owner, repo: firstPathSegment };
+    }
+
+    function isTargetHtml(path) {
+      const lower = path.toLowerCase();
+      return lower.endsWith(".html") && lower !== "index.html" && !lower.endsWith("/index.html");
+    }
+
+    function descriptionForPath(path) {
+      const match = fallbackAppData.find((item) => item.path === path);
+      return match ? match.description : "HTML page in this repository.";
+    }
+
+    async function fetchGitHubTreeHtmlPaths() {
+      const context = repoContextFromLocation();
+      if (!context) return [];
+
+      const repoRes = await fetch(`https://api.github.com/repos/${context.owner}/${context.repo}`);
+      if (!repoRes.ok) throw new Error("Repository metadata request failed");
+      const repo = await repoRes.json();
+      const branch = repo.default_branch || "main";
+
+      const treeRes = await fetch(`https://api.github.com/repos/${context.owner}/${context.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
+      if (!treeRes.ok) throw new Error("Repository tree request failed");
+      const treeData = await treeRes.json();
+      if (!Array.isArray(treeData.tree)) return [];
+
+      return treeData.tree
+        .filter((entry) => entry && entry.type === "blob" && typeof entry.path === "string" && isTargetHtml(entry.path))
+        .map((entry) => entry.path)
+        .sort((a, b) => a.localeCompare(b));
+    }
+
+    function uniquePaths(paths) {
+      return [...new Set(paths.filter(Boolean))];
+    }
+
+    async function titleForPath(path) {
+      try {
+        const res = await fetch(path, { cache: "no-store" });
+        if (!res.ok) throw new Error("title fetch failed");
+        const html = await res.text();
+        const match = html.match(/<title>([^<]+)<\/title>/i);
+        return match && match[1] ? match[1].trim() : humanizeFilename(path);
+      } catch {
+        return humanizeFilename(path);
+      }
+    }
+
+    function renderCards(apps) {
+      appsGrid.innerHTML = "";
+      for (const app of apps) {
+        const card = document.createElement("article");
+        card.className = "card";
+        card.innerHTML = `
+          <header class="card-top">
+            <h2 class="card-title">${app.title}</h2>
+            <div class="card-path">${app.path}</div>
+          </header>
+          <div class="card-main">
+            <p class="desc">${app.description}</p>
+            <a class="open-link" href="${encodeURI(app.path)}">Open app</a>
+          </div>
+        `;
+        appsGrid.appendChild(card);
+      }
+    }
+
+    async function buildIndex() {
+      stateText.textContent = "Discovering HTML pages...";
+
+      let discovered = [];
+      try {
+        discovered = await fetchGitHubTreeHtmlPaths();
+      } catch {
+        // Fallback below when API discovery is unavailable.
+      }
+
+      const fallbackPaths = fallbackAppData.map((item) => item.path);
+      const paths = uniquePaths(discovered.length ? discovered : fallbackPaths).filter(isTargetHtml);
+
+      if (!paths.length) {
+        countPill.textContent = "0 apps";
+        stateText.textContent = "No HTML apps found.";
+        return;
+      }
+
+      const apps = await Promise.all(
+        paths.map(async (path) => ({
+          path,
+          title: await titleForPath(path),
+          description: descriptionForPath(path)
+        }))
+      );
+
+      renderCards(apps);
+      countPill.textContent = `${apps.length} app${apps.length === 1 ? "" : "s"}`;
+      stateText.textContent = discovered.length
+        ? "Loaded from repository tree."
+        : "Loaded from local fallback list.";
+    }
+
+    function syncThemePill() {
+      const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      themePill.textContent = `Theme: auto (${dark ? "dark" : "light"})`;
+    }
+
+    syncThemePill();
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncThemePill);
+    }
+    buildIndex();
+  </script>
+</body>
+</html>
