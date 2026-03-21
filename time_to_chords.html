@@ -1,0 +1,1704 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f7fa"/>
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1724"/>
+  <title>Time to Chords — Jam Session Generator</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --bg2: #ffffff;
+      --card: rgba(255,255,255,0.92);
+      --text: #1a2233;
+      --muted: #5a6b80;
+      --border: rgba(0,0,0,0.10);
+      --accent: #2563eb;
+      --accent-soft: rgba(37,99,235,0.10);
+      --accent-glow: rgba(37,99,235,0.25);
+      --highlight: #f59e0b;
+      --highlight-soft: rgba(245,158,11,0.15);
+      --success: #10b981;
+      --danger: #ef4444;
+      --shadow: 0 8px 32px rgba(0,0,0,0.08);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --transition-bg: transparent;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1724;
+        --bg2: #1a2538;
+        --card: rgba(26,37,56,0.92);
+        --text: #e8edf5;
+        --muted: #8899b0;
+        --border: rgba(255,255,255,0.10);
+        --accent: #60a5fa;
+        --accent-soft: rgba(96,165,250,0.12);
+        --accent-glow: rgba(96,165,250,0.30);
+        --highlight: #fbbf24;
+        --highlight-soft: rgba(251,191,36,0.18);
+        --shadow: 0 8px 32px rgba(0,0,0,0.32);
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.45;
+      -webkit-text-size-adjust: 100%;
+      overflow-x: hidden;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 12px 14px 80px; }
+
+    /* ── Header ── */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; padding: 8px 0 12px; flex-wrap: wrap;
+    }
+    .top-left { display: flex; align-items: center; gap: 10px; }
+    .logo {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--highlight));
+      display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 18px;
+      box-shadow: var(--shadow); flex-shrink: 0;
+    }
+    .top-title { font-size: 15px; font-weight: 700; }
+    .top-sub { font-size: 11px; color: var(--muted); }
+    .top-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+    /* ── Buttons & Controls ── */
+    .btn {
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--text); font-family: var(--font); font-size: 13px;
+      padding: 7px 12px; border-radius: var(--radius-sm);
+      cursor: pointer; white-space: nowrap; transition: background 0.15s, border-color 0.15s;
+    }
+    .btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+    select.btn { appearance: none; padding-right: 24px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%236b7280' stroke-width='1.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .btn-icon { padding: 7px 9px; font-size: 16px; line-height: 1; }
+
+    /* ── Section Info ── */
+    .section-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      box-shadow: var(--shadow); margin-bottom: 12px;
+      position: relative; overflow: hidden;
+    }
+    .section-card.transitioning {
+      border-color: var(--highlight);
+      background: linear-gradient(135deg, var(--card), var(--highlight-soft));
+    }
+    .section-num { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+    .section-name { font-size: clamp(20px, 5vw, 28px); font-weight: 800; margin: 4px 0 2px; line-height: 1.15; }
+    .section-desc { font-size: 14px; color: var(--muted); margin: 0; }
+    .section-meta { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+    .pill {
+      font-size: 12px; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--accent-soft);
+      color: var(--accent); font-weight: 600;
+    }
+    .pill.key-pill { background: var(--highlight-soft); color: var(--highlight); border-color: transparent; }
+    .time-display {
+      font-family: var(--mono); font-size: 14px; font-weight: 600;
+      color: var(--accent); margin-left: auto;
+    }
+    .transition-banner {
+      display: none; margin-top: 10px; padding: 8px 14px;
+      background: var(--highlight-soft); border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600; color: var(--highlight);
+    }
+    .section-card.transitioning .transition-banner { display: block; }
+    .progress-bar {
+      position: absolute; bottom: 0; left: 0; height: 3px;
+      background: var(--accent); transition: width 1s linear;
+    }
+    .section-card.transitioning .progress-bar { background: var(--highlight); }
+
+    /* ── Chord Progression ── */
+    .chord-section { margin-bottom: 12px; }
+    .chord-section-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .chord-grid {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .chord-cell {
+      min-width: 56px; padding: 10px 12px; text-align: center;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--card); font-size: clamp(16px, 4vw, 22px); font-weight: 700;
+      transition: all 0.2s; cursor: pointer; position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .chord-cell:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .chord-cell.active {
+      border-color: var(--accent); background: var(--accent-soft);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .chord-cell .bar-num {
+      position: absolute; top: 2px; left: 5px; font-size: 9px;
+      color: var(--muted); font-weight: 400;
+    }
+    .chord-row-label {
+      font-size: 11px; color: var(--muted); font-weight: 600;
+      min-width: 100%; margin-top: 4px; margin-bottom: 2px;
+    }
+    .bar-line {
+      width: 2px; min-height: 36px; background: var(--border);
+      border-radius: 1px; align-self: stretch; flex-shrink: 0;
+    }
+
+    /* ── Notation ── */
+    .notation-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      box-shadow: var(--shadow); margin-bottom: 12px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .notation-card svg { display: block; margin: 0 auto; }
+    .notation-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .staff-line { stroke: var(--muted); stroke-width: 0.8; opacity: 0.5; }
+    .note-head { fill: var(--text); }
+    .note-text { fill: var(--text); font-family: var(--font); font-weight: 700; }
+    .accidental-text { fill: var(--text); font-family: var(--font); }
+    .chord-label-text { fill: var(--accent); font-family: var(--font); font-weight: 700; }
+    .ledger-line { stroke: var(--text); stroke-width: 0.8; opacity: 0.6; }
+    .clef-text { fill: var(--muted); font-family: serif; }
+    .brace-path { stroke: var(--muted); fill: none; stroke-width: 1.5; }
+
+    /* ── Chord Diagrams ── */
+    .diagrams-row {
+      display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch; margin-bottom: 12px;
+    }
+    .diagram-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 14px 10px;
+      box-shadow: var(--shadow); flex-shrink: 0; text-align: center;
+      min-width: 120px;
+    }
+    .diagram-card.active-diagram { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+    .diagram-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .diagram-card svg { display: block; margin: 0 auto; }
+    .fret-line { stroke: var(--muted); stroke-width: 0.8; }
+    .string-line { stroke: var(--muted); stroke-width: 0.8; }
+    .nut-line { stroke: var(--text); stroke-width: 2.5; }
+    .finger-dot { fill: var(--accent); }
+    .barre-bar { fill: var(--accent); rx: 4; }
+    .open-circle { fill: none; stroke: var(--muted); stroke-width: 1.2; }
+    .muted-x { stroke: var(--muted); stroke-width: 1.5; }
+    .fret-num-text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+    .piano-white { fill: var(--bg2); stroke: var(--muted); stroke-width: 0.8; }
+    .piano-black { fill: var(--text); stroke: var(--muted); stroke-width: 0.5; }
+    .piano-pressed-white { fill: var(--accent); opacity: 0.7; }
+    .piano-pressed-black { fill: var(--accent); }
+
+    /* ── Timeline ── */
+    .timeline {
+      display: grid; grid-template-columns: repeat(12, 1fr);
+      gap: 3px; margin-bottom: 12px;
+    }
+    .tl-cell {
+      padding: 8px 2px; text-align: center; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--card);
+      cursor: pointer; transition: all 0.15s; font-size: 11px; font-weight: 600;
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .tl-cell:hover { border-color: var(--accent); }
+    .tl-cell.tl-active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .tl-cell.tl-past { opacity: 0.5; }
+    .tl-cell .tl-num { display: block; font-size: 13px; font-weight: 800; }
+    .tl-cell .tl-name { display: none; }
+    @media (min-width: 700px) {
+      .tl-cell .tl-name { display: block; font-size: 9px; color: var(--muted); margin-top: 2px; }
+      .tl-cell.tl-active .tl-name { color: var(--accent); }
+    }
+
+    /* ── Controls Panel ── */
+    .controls-panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      box-shadow: var(--shadow); margin-bottom: 12px;
+    }
+    .controls-panel.collapsed .controls-body { display: none; }
+    .controls-header {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none;
+    }
+    .controls-header h3 { margin: 0; font-size: 14px; }
+    .controls-body { margin-top: 12px; }
+    .ctrl-row {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .ctrl-row:last-child { margin-bottom: 0; }
+    .ctrl-label { font-size: 13px; font-weight: 600; min-width: 80px; color: var(--muted); }
+    .ctrl-group { display: flex; gap: 4px; flex-wrap: wrap; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 3px; background: var(--border);
+      outline: none; flex: 1; min-width: 100px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+      border: 2px solid var(--bg2);
+    }
+    .speed-val { font-family: var(--mono); font-size: 13px; font-weight: 600; min-width: 36px; text-align: center; }
+    .checkbox-row { display: flex; align-items: center; gap: 6px; }
+    .checkbox-row input[type="checkbox"] {
+      width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer;
+    }
+    .checkbox-row label { font-size: 13px; cursor: pointer; }
+
+    /* ── Footer ── */
+    .footer { text-align: center; color: var(--muted); font-size: 12px; padding: 20px 0 10px; }
+    .footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── Responsive ── */
+    @media (min-width: 700px) {
+      .wrap { padding: 16px 24px 80px; }
+      .diagrams-notation-row {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      }
+      .notation-card { margin-bottom: 0; }
+    }
+    @media (max-width: 400px) {
+      .chord-cell { min-width: 48px; padding: 8px 8px; font-size: 15px; }
+      .timeline { gap: 2px; }
+      .tl-cell { padding: 6px 1px; font-size: 10px; }
+    }
+
+    /* ── Transitions & Animations ── */
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .slide-in { animation: slideIn 0.3s ease-out; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="top-left">
+      <div class="logo">&#9835;</div>
+      <div>
+        <div class="top-title">Time to Chords</div>
+        <div class="top-sub">Jam Session Generator</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <select class="btn" id="instrumentSel" title="Instrument">
+        <option value="guitar">Guitar</option>
+        <option value="ukulele">Ukulele</option>
+        <option value="piano">Piano</option>
+        <option value="violin">Violin</option>
+        <option value="bass">Bass</option>
+      </select>
+      <select class="btn" id="transposeSel" title="Transpose">
+        <option value="0">Concert (C)</option>
+        <option value="2">Bb Instrument</option>
+        <option value="9">Eb Instrument</option>
+        <option value="1">+1 (Db)</option>
+        <option value="3">+3 (Eb)</option>
+        <option value="5">+5 (F)</option>
+        <option value="7">+7 (G)</option>
+        <option value="10">+10 (Bb)</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Section Info -->
+  <div class="section-card" id="sectionCard">
+    <div class="section-num" id="sectionNum">Section 1 of 12</div>
+    <div class="section-name" id="sectionName">Loading...</div>
+    <p class="section-desc" id="sectionDesc"></p>
+    <div class="section-meta">
+      <span class="pill" id="feelPill"></span>
+      <span class="pill key-pill" id="keyPill">Key of C</span>
+      <span class="time-display" id="timeDisplay">5:00</span>
+    </div>
+    <div class="transition-banner" id="transitionBanner">
+      Next up: <span id="nextSectionName"></span> &mdash; <span id="transCountdown"></span>
+    </div>
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <!-- Chord Progression -->
+  <div class="chord-section" id="chordSection">
+    <div class="chord-section-label">Chord Progression</div>
+    <div class="chord-grid" id="chordGrid"></div>
+  </div>
+
+  <!-- Notation + Diagrams (side by side on desktop) -->
+  <div class="diagrams-notation-row">
+    <div class="notation-card" id="notationCard">
+      <div class="notation-label">Grand Staff</div>
+      <div id="notationContainer"></div>
+    </div>
+    <div id="diagramArea">
+      <div class="chord-section-label">Chord Diagrams</div>
+      <div class="diagrams-row" id="diagramsRow"></div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <nav class="timeline" id="timeline" aria-label="Section timeline"></nav>
+
+  <!-- Controls -->
+  <div class="controls-panel" id="controlsPanel">
+    <div class="controls-header" id="controlsToggle">
+      <h3>Controls</h3>
+      <span id="controlsArrow">&#9660;</span>
+    </div>
+    <div class="controls-body" id="controlsBody">
+      <div class="ctrl-row">
+        <span class="ctrl-label">Mode</span>
+        <div class="ctrl-group" id="modeGroup">
+          <button class="btn active" data-mode="realtime">Real Time</button>
+          <button class="btn" data-mode="timer">Timer</button>
+          <button class="btn" data-mode="manual">Manual</button>
+        </div>
+      </div>
+      <div class="ctrl-row" id="speedRow">
+        <span class="ctrl-label">Speed</span>
+        <input type="range" id="speedSlider" min="0.25" max="4" step="0.25" value="1"/>
+        <span class="speed-val" id="speedVal">1x</span>
+      </div>
+      <div class="ctrl-row" id="manualRow" style="display:none">
+        <span class="ctrl-label">Navigate</span>
+        <button class="btn btn-icon" id="prevBtn">&#9664;</button>
+        <button class="btn btn-icon" id="nextBtn">&#9654;</button>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Display</span>
+        <div class="ctrl-group">
+          <div class="checkbox-row">
+            <input type="checkbox" id="showNotation" checked/>
+            <label for="showNotation">Notation</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="showDiagrams" checked/>
+            <label for="showDiagrams">Diagrams</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="audioEnabled" checked/>
+            <label for="audioEnabled">Audio cues</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    Time to Chords &mdash; <a href="./">misc-music-webapps</a>
+  </footer>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+const NOTE_NAMES_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTE_NAMES_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const NOTE_TO_SEMI = { 'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'Fb':4,'F':5,'E#':5,'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11,'Cb':11 };
+const DIATONIC = { C:0, D:1, E:2, F:3, G:4, A:5, B:6 };
+
+// Keys that prefer flats in their spelling
+const FLAT_KEYS = new Set([5,10,3,8,1,6]); // F,Bb,Eb,Ab,Db,Gb
+
+// Chord quality → intervals from root (in semitones)
+const QUALITIES = {
+  '':       [0,4,7],
+  'm':      [0,3,7],
+  '7':      [0,4,7,10],
+  'maj7':   [0,4,7,11],
+  'm7':     [0,3,7,10],
+  'm7b5':   [0,3,6,10],
+  'dim':    [0,3,6],
+  'dim7':   [0,3,6,9],
+  'aug':    [0,4,8],
+  'sus4':   [0,5,7],
+  'sus2':   [0,2,7],
+  '6':      [0,4,7,9],
+  'm6':     [0,3,7,9],
+  '9':      [0,4,7,10,14],
+  'add9':   [0,4,7,14],
+  'm9':     [0,3,7,10,14],
+  '7#9':    [0,4,7,10,15],
+  '7b9':    [0,4,7,10,13],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION DEFINITIONS (12 sections, ~5 min each)
+// ═══════════════════════════════════════════════════════════════
+const SECTIONS = [
+  {
+    name: "Minor ii–iii Warmup",
+    description: "Ease into the session with a gentle two-chord minor groove",
+    key: "G",
+    feel: "Medium groove",
+    barsPerLine: 4,
+    bars: ["Am","Am","Am","Am","Bm","Bm","Bm","Bm"],
+  },
+  {
+    name: "Major IV–V Groove",
+    description: "Bright two-chord major vamp to open things up",
+    key: "C",
+    feel: "Upbeat",
+    barsPerLine: 4,
+    bars: ["F","F","F","F","G","G","G","G"],
+  },
+  {
+    name: "Smooth ii–V–I",
+    description: "The essential jazz cadence — feel the resolution",
+    key: "F",
+    feel: "Medium swing",
+    barsPerLine: 4,
+    bars: ["Gm7","Gm7","C7","C7","Fmaj7","Fmaj7","Fmaj7","Fmaj7"],
+  },
+  {
+    name: "12-Bar Blues",
+    description: "Classic shuffle blues — the foundation of it all",
+    key: "A",
+    feel: "Shuffle",
+    barsPerLine: 4,
+    bars: ["A7","A7","A7","A7","D7","D7","A7","A7","E7","D7","A7","E7"],
+  },
+  {
+    name: "Minor Blues",
+    description: "Deep, soulful minor blues variation",
+    key: "E",
+    feel: "Slow blues",
+    barsPerLine: 4,
+    bars: ["Em7","Em7","Em7","Em7","Am7","Am7","Em7","Em7","B7","Am7","Em7","B7"],
+  },
+  {
+    name: "Amazing Grace",
+    description: "Beloved hymn — play the melody or comp underneath",
+    key: "G",
+    feel: "Slow & stately",
+    barsPerLine: 4,
+    bars: ["G","G","C","G","G","G","D","D","G","G7","C","G","Em","D","G","G"],
+  },
+  {
+    name: "Rhythm Changes",
+    description: "Gershwin's 'I Got Rhythm' — the jazz standard of standards",
+    key: "C",
+    feel: "Medium-up swing",
+    barsPerLine: 8,
+    formLabels: { 0:"A₁", 8:"A₂", 16:"B", 24:"A₃" },
+    bars: [
+      // A1
+      "Cmaj7","Am7","Dm7","G7","Em7","Am7","Dm7","G7",
+      // A2
+      "Cmaj7","Am7","Dm7","G7","Em7","Am7","Cmaj7","Cmaj7",
+      // B (bridge)
+      "E7","E7","A7","A7","D7","D7","G7","G7",
+      // A3
+      "Cmaj7","Am7","Dm7","G7","Em7","Am7","Cmaj7","Cmaj7",
+    ],
+  },
+  {
+    name: "Chromatic Descent",
+    description: "Haunting minor line with descending chromatic bass",
+    key: "Am",
+    feel: "Ballad",
+    barsPerLine: 4,
+    bars: ["Am","Am/G#","Am/G","Am/F#","Fmaj7","Fm","C/E","E7"],
+  },
+  {
+    name: "Autumn Leaves",
+    description: "The quintessential jazz standard in a guitar-friendly key",
+    key: "Em",
+    feel: "Medium swing",
+    barsPerLine: 4,
+    formLabels: { 0:"A", 8:"B" },
+    bars: [
+      // A
+      "Am7","D7","Gmaj7","Cmaj7","F#m7b5","B7","Em","Em",
+      // B
+      "F#m7b5","B7","Em","Em","Am7","D7","Gmaj7","Gmaj7",
+    ],
+  },
+  {
+    name: "Classic Turnaround",
+    description: "Timeless I–vi–IV–V doo-wop / pop progression",
+    key: "G",
+    feel: "Feel-good groove",
+    barsPerLine: 4,
+    bars: ["G","Em","C","D","G","Em","C","D"],
+  },
+  {
+    name: "Rhythm Changes Finale",
+    description: "Rhythm changes in D — bringing it home with energy",
+    key: "D",
+    feel: "Up-tempo swing",
+    barsPerLine: 8,
+    formLabels: { 0:"A₁", 8:"A₂", 16:"B", 24:"A₃" },
+    bars: [
+      "Dmaj7","Bm7","Em7","A7","F#m7","Bm7","Em7","A7",
+      "Dmaj7","Bm7","Em7","A7","F#m7","Bm7","Dmaj7","Dmaj7",
+      "F#7","F#7","B7","B7","E7","E7","A7","A7",
+      "Dmaj7","Bm7","Em7","A7","F#m7","Bm7","Dmaj7","Dmaj7",
+    ],
+  },
+  {
+    name: "Grand Finale",
+    description: "AABA closer — I IV V I twice, then vi iii ii V, and home",
+    key: "C",
+    feel: "Triumphant",
+    barsPerLine: 4,
+    formLabels: { 0:"A₁", 8:"A₂", 16:"B", 20:"A₃" },
+    bars: [
+      // A1
+      "C","F","G","C","C","F","G","C",
+      // A2
+      "C","F","G","C","C","F","G","C",
+      // B
+      "Am","Em","Dm","G",
+      // A3
+      "C","F","G","C","C","F","G","C",
+    ],
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// GUITAR CHORD SHAPES
+// Frets: [E2, A2, D3, G3, B3, E4], null = muted, 0 = open
+// ═══════════════════════════════════════════════════════════════
+const GUITAR = {
+  'C':      {f:[null,3,2,0,1,0]},
+  'D':      {f:[null,null,0,2,3,2]},
+  'E':      {f:[0,2,2,1,0,0]},
+  'F':      {f:[1,3,3,2,1,1],barre:1},
+  'G':      {f:[3,2,0,0,0,3]},
+  'A':      {f:[null,0,2,2,2,0]},
+  'B':      {f:[null,2,4,4,4,2],barre:2},
+  'Am':     {f:[null,0,2,2,1,0]},
+  'Bm':     {f:[null,2,4,4,3,2],barre:2},
+  'Cm':     {f:[null,3,5,5,4,3],barre:3},
+  'Dm':     {f:[null,null,0,2,3,1]},
+  'Em':     {f:[0,2,2,0,0,0]},
+  'Fm':     {f:[1,3,3,1,1,1],barre:1},
+  'F#m':    {f:[2,4,4,2,2,2],barre:2},
+  'Gm':     {f:[3,5,5,3,3,3],barre:3},
+  'A7':     {f:[null,0,2,0,2,0]},
+  'B7':     {f:[null,2,1,2,0,2]},
+  'C7':     {f:[null,3,2,3,1,0]},
+  'D7':     {f:[null,null,0,2,1,2]},
+  'E7':     {f:[0,2,0,1,0,0]},
+  'F#7':    {f:[2,4,2,3,2,2],barre:2},
+  'G7':     {f:[3,2,0,0,0,1]},
+  'Am7':    {f:[null,0,2,0,1,0]},
+  'Bm7':    {f:[null,2,4,2,3,2],barre:2},
+  'Cm7':    {f:[null,3,5,3,4,3],barre:3},
+  'Dm7':    {f:[null,null,0,2,1,1]},
+  'Em7':    {f:[0,2,0,0,0,0]},
+  'F#m7':   {f:[2,4,2,2,2,2],barre:2},
+  'Gm7':    {f:[3,5,3,3,3,3],barre:3},
+  'Cmaj7':  {f:[null,3,2,0,0,0]},
+  'Dmaj7':  {f:[null,null,0,2,2,2]},
+  'Fmaj7':  {f:[null,null,3,2,1,0]},
+  'Gmaj7':  {f:[3,2,0,0,0,2]},
+  'Bbmaj7': {f:[null,1,3,2,3,1],barre:1},
+  'Ebmaj7': {f:[null,null,1,3,3,3]},
+  'Am7b5':  {f:[null,0,1,0,1,0]},
+  'F#m7b5': {f:[2,0,2,2,1,0]},
+  'Am/G#':  {f:[4,0,2,2,1,0]},
+  'Am/G':   {f:[3,0,2,2,1,0]},
+  'Am/F#':  {f:[2,0,2,2,1,0]},
+  'C/E':    {f:[0,3,2,0,1,0]},
+  'G7':     {f:[3,2,0,0,0,1]},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// UKULELE CHORD SHAPES (G4, C4, E4, A4)
+// ═══════════════════════════════════════════════════════════════
+const UKULELE = {
+  'C':      {f:[0,0,0,3]},
+  'D':      {f:[2,2,2,0]},
+  'E':      {f:[4,4,4,2]},
+  'F':      {f:[2,0,1,0]},
+  'G':      {f:[0,2,3,2]},
+  'A':      {f:[2,1,0,0]},
+  'B':      {f:[4,3,2,2]},
+  'Am':     {f:[2,0,0,0]},
+  'Bm':     {f:[4,2,2,2]},
+  'Dm':     {f:[2,2,1,0]},
+  'Em':     {f:[0,4,3,2]},
+  'Fm':     {f:[1,0,1,3]},
+  'F#m':    {f:[2,1,2,0]},
+  'Gm':     {f:[0,2,3,1]},
+  'A7':     {f:[0,1,0,0]},
+  'B7':     {f:[2,3,2,2]},
+  'C7':     {f:[0,0,0,1]},
+  'D7':     {f:[2,2,2,3]},
+  'E7':     {f:[1,2,0,2]},
+  'F#7':    {f:[3,4,3,4]},
+  'G7':     {f:[0,2,1,2]},
+  'Am7':    {f:[0,0,0,0]},
+  'Bm7':    {f:[2,2,2,2]},
+  'Dm7':    {f:[2,2,1,3]},
+  'Em7':    {f:[0,2,0,2]},
+  'F#m7':   {f:[2,4,2,4]},
+  'Gm7':    {f:[0,2,1,1]},
+  'Cmaj7':  {f:[0,0,0,2]},
+  'Dmaj7':  {f:[2,2,2,4]},
+  'Fmaj7':  {f:[2,4,1,0]},
+  'Gmaj7':  {f:[0,2,2,2]},
+  'Am7b5':  {f:[2,0,0,1]},
+  'F#m7b5': {f:[2,1,2,1]},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const state = {
+  mode: 'realtime',    // realtime | timer | manual
+  speed: 1,
+  timerStart: null,
+  currentSection: 0,
+  selectedChord: null, // index into current bars for diagram focus
+  instrument: 'guitar',
+  transpose: 0,
+  showNotation: true,
+  showDiagrams: true,
+  audioEnabled: true,
+  lastSection: -1,     // for detecting transitions
+  paused: false,
+};
+
+// Section duration in seconds
+const SECTION_DURATION = 5 * 60; // 5 minutes
+const TRANSITION_TIME = 45;      // last 45 seconds of each section
+
+// ═══════════════════════════════════════════════════════════════
+// MUSIC THEORY UTILITIES
+// ═══════════════════════════════════════════════════════════════
+function parseChord(symbol) {
+  // Returns { root, rootSemi, quality, bass, bassSemi, display }
+  const m = symbol.match(/^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/);
+  if (!m) return { root: 'C', rootSemi: 0, quality: '', bass: null, bassSemi: null, display: symbol };
+  const root = m[1];
+  let quality = m[2] || '';
+  const bass = m[3] || null;
+  // Normalize quality names
+  quality = quality.replace('△','maj').replace('°','dim').replace('ø','m7b5');
+  return {
+    root,
+    rootSemi: NOTE_TO_SEMI[root],
+    quality,
+    bass,
+    bassSemi: bass ? NOTE_TO_SEMI[bass] : null,
+    display: symbol,
+  };
+}
+
+function semiToName(semi, useFlats) {
+  semi = ((semi % 12) + 12) % 12;
+  return useFlats ? NOTE_NAMES_FLAT[semi] : NOTE_NAMES_SHARP[semi];
+}
+
+function transposeChord(symbol, semitones) {
+  if (semitones === 0) return symbol;
+  const p = parseChord(symbol);
+  const newRootSemi = ((p.rootSemi + semitones) % 12 + 12) % 12;
+  const useFlats = FLAT_KEYS.has(newRootSemi);
+  let result = semiToName(newRootSemi, useFlats) + p.quality;
+  if (p.bass) {
+    const newBassSemi = ((p.bassSemi + semitones) % 12 + 12) % 12;
+    result += '/' + semiToName(newBassSemi, useFlats);
+  }
+  return result;
+}
+
+function transposeKey(keyStr, semitones) {
+  if (semitones === 0) return keyStr;
+  // Handle minor keys like "Am", "Em"
+  const m = keyStr.match(/^([A-G][#b]?)(m?)$/);
+  if (!m) return keyStr;
+  const semi = NOTE_TO_SEMI[m[1]];
+  const newSemi = ((semi + semitones) % 12 + 12) % 12;
+  const useFlats = FLAT_KEYS.has(newSemi);
+  return semiToName(newSemi, useFlats) + m[2];
+}
+
+function getChordTones(symbol) {
+  const p = parseChord(symbol);
+  const q = QUALITIES[p.quality] || QUALITIES[''];
+  return q.map(i => ((p.rootSemi + i) % 12 + 12) % 12);
+}
+
+// Voice leading: given chord tones (pitch classes), produce voiced notes
+// Returns array of { pc, octave, name } for 4 voices
+function voiceChord(chordTones, prevVoicing, isFirst) {
+  const root = chordTones[0];
+  // Ensure we have 4 tones (double root if triad)
+  let tones = [...chordTones];
+  while (tones.length < 4) tones.push(tones[0]);
+  tones = tones.slice(0, 4);
+
+  if (isFirst || !prevVoicing) {
+    // Default voicing: bass in octave 2-3, upper voices around octave 4
+    const bassOct = root >= 7 ? 2 : 3;
+    return [
+      { pc: tones[0], octave: bassOct },
+      { pc: tones[1], octave: 3 + (tones[1] < 5 ? 1 : 0) },
+      { pc: tones[2], octave: 4 },
+      { pc: tones[3], octave: 4 + (tones[3] < 3 ? 0 : 0) },
+    ];
+  }
+
+  // Voice leading: minimize movement
+  const bass = { pc: tones[0], octave: closestOctave(tones[0], prevVoicing[0], 2, 3) };
+  const upperTones = tones.slice(1);
+  const prevUpper = prevVoicing.slice(1);
+
+  // Try all 6 permutations of 3 upper tones
+  const perms = permutations3(upperTones);
+  let bestVoices = null;
+  let bestCost = Infinity;
+
+  for (const perm of perms) {
+    let cost = 0;
+    const voices = [];
+    let valid = true;
+    for (let i = 0; i < 3; i++) {
+      const oct = closestOctave(perm[i], prevUpper[i], 3, 5);
+      const midi = perm[i] + oct * 12;
+      const prevMidi = prevUpper[i].pc + prevUpper[i].octave * 12;
+      cost += Math.abs(midi - prevMidi);
+      voices.push({ pc: perm[i], octave: oct });
+    }
+    // Check no voice crossing
+    const midiArr = voices.map(v => v.pc + v.octave * 12);
+    if (midiArr[0] > midiArr[1] || midiArr[1] > midiArr[2]) valid = false;
+    if (valid && cost < bestCost) {
+      bestCost = cost;
+      bestVoices = voices;
+    }
+  }
+
+  if (!bestVoices) {
+    // Fallback
+    bestVoices = upperTones.map((t, i) => ({
+      pc: t,
+      octave: closestOctave(t, prevUpper[i], 3, 5)
+    }));
+  }
+
+  return [bass, ...bestVoices];
+}
+
+function closestOctave(pc, prevVoice, minOct, maxOct) {
+  const prevMidi = prevVoice.pc + prevVoice.octave * 12;
+  let bestOct = minOct;
+  let bestDist = Infinity;
+  for (let o = minOct; o <= maxOct; o++) {
+    const d = Math.abs((pc + o * 12) - prevMidi);
+    if (d < bestDist) { bestDist = d; bestOct = o; }
+  }
+  return bestOct;
+}
+
+function permutations3(arr) {
+  if (arr.length <= 1) return [arr];
+  if (arr.length === 2) return [[arr[0],arr[1]], [arr[1],arr[0]]];
+  const [a,b,c] = arr;
+  return [[a,b,c],[a,c,b],[b,a,c],[b,c,a],[c,a,b],[c,b,a]];
+}
+
+function pcToNoteName(pc, octave) {
+  // Returns { name, accidental } for staff positioning
+  // Use simplest spelling
+  const names = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+  const n = names[pc % 12];
+  const letter = n[0];
+  const acc = n.length > 1 ? n[1] : '';
+  return { letter, accidental: acc === '#' ? '#' : acc === 'b' ? 'b' : '', octave };
+}
+
+function noteToStaffStep(letter, octave) {
+  // Returns staff step where C4 = 0, D4 = 1, etc.
+  return (octave - 4) * 7 + DIATONIC[letter];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TIME ENGINE
+// ═══════════════════════════════════════════════════════════════
+function getSessionMinutes() {
+  if (state.mode === 'realtime') {
+    return new Date().getMinutes() + new Date().getSeconds() / 60;
+  } else if (state.mode === 'timer') {
+    if (!state.timerStart || state.paused) return state.currentSection * 5;
+    const elapsedMs = Date.now() - state.timerStart;
+    const elapsedMin = (elapsedMs / 60000) * state.speed;
+    return elapsedMin % 60;
+  } else {
+    return state.currentSection * 5;
+  }
+}
+
+function computeState() {
+  const mins = getSessionMinutes();
+  const sectionIdx = Math.min(Math.floor(mins / 5), 11);
+  const minsInSection = mins - sectionIdx * 5;
+  const secsInSection = minsInSection * 60;
+  const secsRemaining = SECTION_DURATION - secsInSection;
+  const isTransitioning = secsRemaining <= TRANSITION_TIME && sectionIdx < 11;
+  const progress = secsInSection / SECTION_DURATION;
+
+  // Determine current bar in the progression
+  const section = SECTIONS[sectionIdx];
+  const playTime = SECTION_DURATION - TRANSITION_TIME;
+  const barDuration = playTime / section.bars.length;
+  const repetitions = Math.max(1, Math.floor(playTime / (section.bars.length * barDuration)));
+  const totalBarsInPlay = section.bars.length * repetitions;
+  const currentBarRaw = Math.floor(secsInSection / barDuration);
+  const currentBar = isTransitioning ? -1 : (currentBarRaw % section.bars.length);
+
+  return {
+    sectionIdx,
+    secsRemaining,
+    isTransitioning,
+    progress,
+    currentBar,
+    transitionSecs: isTransitioning ? secsRemaining : 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIO ENGINE (White noise ocean sweeps)
+// ═══════════════════════════════════════════════════════════════
+let audioCtx = null;
+let isPlayingTransition = false;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playOceanSweep(duration) {
+  if (!state.audioEnabled || isPlayingTransition) return;
+  isPlayingTransition = true;
+  try {
+    const ctx = getAudioCtx();
+    const bufferSize = ctx.sampleRate * duration;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+
+    // Low-pass filter with sweep
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.Q.value = 2;
+    const t = ctx.currentTime;
+    filter.frequency.setValueAtTime(120, t);
+    filter.frequency.exponentialRampToValueAtTime(1800, t + duration * 0.4);
+    filter.frequency.exponentialRampToValueAtTime(400, t + duration * 0.7);
+    filter.frequency.exponentialRampToValueAtTime(100, t + duration);
+
+    // Main gain envelope
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.15, t + duration * 0.15);
+    gain.gain.setValueAtTime(0.15, t + duration * 0.6);
+    gain.gain.linearRampToValueAtTime(0, t + duration);
+
+    // Tremolo LFO for natural ocean feel
+    const lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(0.25, t);
+    lfo.frequency.linearRampToValueAtTime(0.5, t + duration);
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 0.06;
+    lfo.connect(lfoGain);
+    lfoGain.connect(gain.gain);
+
+    // Second filter for warmth
+    const warmth = ctx.createBiquadFilter();
+    warmth.type = 'lowpass';
+    warmth.frequency.value = 3000;
+    warmth.Q.value = 0.5;
+
+    source.connect(filter);
+    filter.connect(warmth);
+    warmth.connect(gain);
+    gain.connect(ctx.destination);
+
+    lfo.start(t);
+    source.start(t);
+    source.stop(t + duration);
+    lfo.stop(t + duration);
+
+    source.onended = () => { isPlayingTransition = false; };
+  } catch (e) {
+    isPlayingTransition = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SVG NOTATION RENDERER
+// ═══════════════════════════════════════════════════════════════
+const STAFF_Y_REF = 76;     // y-coordinate of middle C
+const HALF_SPACE = 4;        // pixels per diatonic step
+const LINE_SPACING = HALF_SPACE * 2; // 8px between staff lines
+// Treble staff: lines at steps 2,4,6,8,10 from C4 → y = 76-8, 76-16, ... 76-40 → 68,60,52,44,36
+// Bass staff: lines at steps -2,-4,-6,-8,-10 → y = 84,92,100,108,116
+
+function renderNotation(container, chords, transposeAmt) {
+  container.innerHTML = '';
+  if (!state.showNotation || chords.length === 0) return;
+
+  const uniqueChords = [...new Set(chords)];
+  if (uniqueChords.length === 0) return;
+
+  const chordWidth = Math.max(70, Math.min(110, 600 / uniqueChords.length));
+  const leftMargin = 40;
+  const rightMargin = 10;
+  const svgWidth = leftMargin + uniqueChords.length * chordWidth + rightMargin;
+  const svgHeight = 155;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+  svg.setAttribute('width', Math.min(svgWidth, 800));
+  svg.setAttribute('height', svgHeight);
+  svg.style.maxWidth = '100%';
+
+  // Draw staff lines
+  const trebleLines = [2,4,6,8,10]; // steps from C4
+  const bassLines = [-2,-4,-6,-8,-10];
+
+  for (const step of trebleLines) {
+    const y = STAFF_Y_REF - step * HALF_SPACE;
+    addLine(svg, leftMargin - 5, y, svgWidth - rightMargin, y, 'staff-line');
+  }
+  for (const step of bassLines) {
+    const y = STAFF_Y_REF - step * HALF_SPACE;
+    addLine(svg, leftMargin - 5, y, svgWidth - rightMargin, y, 'staff-line');
+  }
+
+  // Clef labels
+  addText(svg, 8, STAFF_Y_REF - 6 * HALF_SPACE + 3, '𝄞', 'clef-text', 22);
+  addText(svg, 8, STAFF_Y_REF + 6 * HALF_SPACE + 2, '𝄢', 'clef-text', 22);
+
+  // Brace (simple arc)
+  const braceTop = STAFF_Y_REF - 10 * HALF_SPACE;
+  const braceBot = STAFF_Y_REF + 10 * HALF_SPACE;
+  const braceMid = STAFF_Y_REF;
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', `M ${leftMargin-6} ${braceTop} Q ${leftMargin-18} ${braceMid} ${leftMargin-6} ${braceBot}`);
+  path.setAttribute('class', 'brace-path');
+  svg.appendChild(path);
+
+  // Voice the chords with voice leading
+  let prevVoicing = null;
+  for (let i = 0; i < uniqueChords.length; i++) {
+    const transposed = transposeChord(uniqueChords[i], transposeAmt);
+    const tones = getChordTones(transposed);
+    const voicing = voiceChord(tones, prevVoicing, i === 0);
+    prevVoicing = voicing;
+
+    const cx = leftMargin + i * chordWidth + chordWidth / 2;
+
+    // Chord label above
+    addText(svg, cx, STAFF_Y_REF - 12 * HALF_SPACE - 4,
+      formatChordDisplay(transposed), 'chord-label-text', 13, 'middle');
+
+    // Draw notes
+    for (const voice of voicing) {
+      const note = pcToNoteName(voice.pc, voice.octave);
+      const step = noteToStaffStep(note.letter, note.octave);
+      const y = STAFF_Y_REF - step * HALF_SPACE;
+
+      // Notehead
+      const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      ellipse.setAttribute('cx', cx);
+      ellipse.setAttribute('cy', y);
+      ellipse.setAttribute('rx', 5.5);
+      ellipse.setAttribute('ry', 4);
+      ellipse.setAttribute('class', 'note-head');
+      ellipse.setAttribute('transform', `rotate(-10 ${cx} ${y})`);
+      svg.appendChild(ellipse);
+
+      // Accidental
+      if (note.accidental) {
+        const accSymbol = note.accidental === '#' ? '♯' : '♭';
+        addText(svg, cx - 10, y + 4, accSymbol, 'accidental-text', 12);
+      }
+
+      // Ledger lines
+      drawLedgerLines(svg, cx, step);
+    }
+  }
+
+  container.appendChild(svg);
+}
+
+function drawLedgerLines(svg, cx, step) {
+  // Treble staff covers steps 2-10, bass covers -10 to -2
+  // Middle C (step 0) needs a ledger line
+
+  if (step <= 0 && step >= -1) {
+    // Between staves - ledger line at step 0 (middle C)
+    if (step === 0) {
+      addLine(svg, cx - 9, STAFF_Y_REF, cx + 9, STAFF_Y_REF, 'ledger-line');
+    }
+  } else if (step > 10) {
+    // Above treble staff
+    for (let s = 12; s <= step; s += 2) {
+      const y = STAFF_Y_REF - s * HALF_SPACE;
+      addLine(svg, cx - 9, y, cx + 9, y, 'ledger-line');
+    }
+  } else if (step < -10) {
+    // Below bass staff
+    for (let s = -12; s >= step; s -= 2) {
+      const y = STAFF_Y_REF - s * HALF_SPACE;
+      addLine(svg, cx - 9, y, cx + 9, y, 'ledger-line');
+    }
+  } else if (step >= 0 && step < 2) {
+    // Just below treble staff
+    if (step === 0) {
+      addLine(svg, cx - 9, STAFF_Y_REF, cx + 9, STAFF_Y_REF, 'ledger-line');
+    }
+  } else if (step > -2 && step <= 0) {
+    // Just above bass staff
+    if (step === 0) {
+      addLine(svg, cx - 9, STAFF_Y_REF, cx + 9, STAFF_Y_REF, 'ledger-line');
+    }
+  }
+}
+
+function addLine(svg, x1, y1, x2, y2, cls) {
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', x1);
+  line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2);
+  line.setAttribute('y2', y2);
+  line.setAttribute('class', cls);
+  svg.appendChild(line);
+}
+
+function addText(svg, x, y, text, cls, size, anchor) {
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('x', x);
+  t.setAttribute('y', y);
+  t.setAttribute('class', cls);
+  t.setAttribute('font-size', size || 12);
+  if (anchor) t.setAttribute('text-anchor', anchor);
+  t.textContent = text;
+  svg.appendChild(t);
+}
+
+function formatChordDisplay(symbol) {
+  // Make the chord symbol more readable
+  return symbol
+    .replace('maj7', '\u0394\u2077')   // △7
+    .replace('m7b5', '\u00F8\u2077')   // ø7
+    .replace('m7', 'm\u2077')
+    .replace('m9', 'm\u2079')
+    .replace('dim7', '\u00B0\u2077')
+    .replace('dim', '\u00B0')
+    .replace('aug', '+')
+    .replace('7', '\u2077')
+    .replace('9', '\u2079')
+    .replace('sus4', 'sus4')
+    .replace('sus2', 'sus2');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHORD DIAGRAM RENDERER
+// ═══════════════════════════════════════════════════════════════
+function renderGuitarDiagram(container, chordName) {
+  const shape = GUITAR[chordName];
+  if (!shape) {
+    container.innerHTML = `<div class="diagram-title">${formatChordDisplay(chordName)}</div><div style="color:var(--muted);font-size:12px;padding:8px">No diagram</div>`;
+    return;
+  }
+
+  const frets = shape.f;
+  const barre = shape.barre || 0;
+  const numStrings = 6;
+  const numFrets = 5;
+  const strSpacing = 16;
+  const fretSpacing = 18;
+  const padLeft = 22;
+  const padTop = 20;
+  const w = padLeft + (numStrings - 1) * strSpacing + 20;
+  const h = padTop + numFrets * fretSpacing + 12;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+
+  // Find min fret for positioning
+  const playedFrets = frets.filter(f => f !== null && f > 0);
+  let minFret = playedFrets.length ? Math.min(...playedFrets) : 1;
+  let maxFret = playedFrets.length ? Math.max(...playedFrets) : 1;
+  let startFret = 1;
+  if (maxFret > 5) {
+    startFret = minFret;
+  } else if (barre > 0 && minFret > 1) {
+    startFret = barre;
+  }
+  const isOpenPos = startFret === 1;
+
+  // Nut or fret number
+  if (isOpenPos) {
+    addLine(svg, padLeft, padTop, padLeft + (numStrings-1)*strSpacing, padTop, 'nut-line');
+  } else {
+    addText(svg, padLeft - 16, padTop + fretSpacing / 2 + 4, startFret + '', 'fret-num-text', 11);
+  }
+
+  // Fret lines
+  for (let f = 0; f <= numFrets; f++) {
+    const y = padTop + f * fretSpacing;
+    addLine(svg, padLeft, y, padLeft + (numStrings-1)*strSpacing, y, 'fret-line');
+  }
+
+  // String lines
+  for (let s = 0; s < numStrings; s++) {
+    const x = padLeft + s * strSpacing;
+    addLine(svg, x, padTop, x, padTop + numFrets * fretSpacing, 'string-line');
+  }
+
+  // Barre
+  if (barre > 0) {
+    const barreY = padTop + (barre - startFret) * fretSpacing + fretSpacing / 2;
+    let firstStr = 0, lastStr = numStrings - 1;
+    for (let s = 0; s < numStrings; s++) {
+      if (frets[s] === barre) { firstStr = s; break; }
+    }
+    for (let s = numStrings - 1; s >= 0; s--) {
+      if (frets[s] === barre) { lastStr = s; break; }
+    }
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', padLeft + firstStr * strSpacing - 4);
+    rect.setAttribute('y', barreY - 4);
+    rect.setAttribute('width', (lastStr - firstStr) * strSpacing + 8);
+    rect.setAttribute('height', 8);
+    rect.setAttribute('class', 'barre-bar');
+    svg.appendChild(rect);
+  }
+
+  // Finger dots, open/muted indicators
+  for (let s = 0; s < numStrings; s++) {
+    const x = padLeft + s * strSpacing;
+    const fret = frets[s];
+
+    if (fret === null) {
+      // Muted
+      const sz = 4;
+      addLine(svg, x-sz, padTop-12-sz, x+sz, padTop-12+sz, 'muted-x');
+      addLine(svg, x-sz, padTop-12+sz, x+sz, padTop-12-sz, 'muted-x');
+    } else if (fret === 0) {
+      // Open
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x);
+      circle.setAttribute('cy', padTop - 12);
+      circle.setAttribute('r', 4);
+      circle.setAttribute('class', 'open-circle');
+      svg.appendChild(circle);
+    } else if (fret !== barre || barre === 0) {
+      // Fingered note
+      const y = padTop + (fret - startFret) * fretSpacing + fretSpacing / 2;
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', x);
+      dot.setAttribute('cy', y);
+      dot.setAttribute('r', 6);
+      dot.setAttribute('class', 'finger-dot');
+      svg.appendChild(dot);
+    }
+  }
+
+  container.innerHTML = `<div class="diagram-title">${formatChordDisplay(chordName)}</div>`;
+  container.appendChild(svg);
+}
+
+function renderUkuleleDiagram(container, chordName) {
+  const shape = UKULELE[chordName];
+  if (!shape) {
+    container.innerHTML = `<div class="diagram-title">${formatChordDisplay(chordName)}</div><div style="color:var(--muted);font-size:12px;padding:8px">No diagram</div>`;
+    return;
+  }
+
+  const frets = shape.f;
+  const numStrings = 4;
+  const numFrets = 5;
+  const strSpacing = 18;
+  const fretSpacing = 18;
+  const padLeft = 22;
+  const padTop = 20;
+  const w = padLeft + (numStrings - 1) * strSpacing + 20;
+  const h = padTop + numFrets * fretSpacing + 12;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+
+  const playedFrets = frets.filter(f => f > 0);
+  const maxFret = playedFrets.length ? Math.max(...playedFrets) : 1;
+  let startFret = 1;
+  if (maxFret > 5) startFret = Math.min(...playedFrets);
+  const isOpenPos = startFret === 1;
+
+  if (isOpenPos) {
+    addLine(svg, padLeft, padTop, padLeft + (numStrings-1)*strSpacing, padTop, 'nut-line');
+  } else {
+    addText(svg, padLeft - 16, padTop + fretSpacing/2 + 4, startFret+'', 'fret-num-text', 11);
+  }
+
+  for (let f = 0; f <= numFrets; f++) {
+    const y = padTop + f * fretSpacing;
+    addLine(svg, padLeft, y, padLeft + (numStrings-1)*strSpacing, y, 'fret-line');
+  }
+  for (let s = 0; s < numStrings; s++) {
+    const x = padLeft + s * strSpacing;
+    addLine(svg, x, padTop, x, padTop + numFrets * fretSpacing, 'string-line');
+  }
+
+  for (let s = 0; s < numStrings; s++) {
+    const x = padLeft + s * strSpacing;
+    const fret = frets[s];
+    if (fret === 0) {
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x);
+      circle.setAttribute('cy', padTop - 12);
+      circle.setAttribute('r', 4);
+      circle.setAttribute('class', 'open-circle');
+      svg.appendChild(circle);
+    } else {
+      const y = padTop + (fret - startFret) * fretSpacing + fretSpacing / 2;
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', x);
+      dot.setAttribute('cy', y);
+      dot.setAttribute('r', 6);
+      dot.setAttribute('class', 'finger-dot');
+      svg.appendChild(dot);
+    }
+  }
+
+  container.innerHTML = `<div class="diagram-title">${formatChordDisplay(chordName)}</div>`;
+  container.appendChild(svg);
+}
+
+function renderPianoDiagram(container, chordName) {
+  const tones = getChordTones(chordName);
+  const pcSet = new Set(tones);
+
+  const whiteW = 20, whiteH = 70, blackW = 13, blackH = 42;
+  // Show one octave (C to B) + next C
+  const whites = [0,2,4,5,7,9,11]; // C D E F G A B
+  const blacks = [1,3,null,6,8,10]; // C# D# _ F# G# A#
+  const numWhite = 8; // C to C
+  const svgW = numWhite * whiteW + 4;
+  const svgH = whiteH + 10;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+
+  // White keys
+  for (let i = 0; i < numWhite; i++) {
+    const x = 2 + i * whiteW;
+    const pc = whites[i % 7];
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', 2);
+    rect.setAttribute('width', whiteW - 1);
+    rect.setAttribute('height', whiteH);
+    rect.setAttribute('class', pcSet.has(pc) ? 'piano-pressed-white' : 'piano-white');
+    rect.setAttribute('rx', 2);
+    svg.appendChild(rect);
+  }
+
+  // Black keys
+  const blackPositions = [0,1,null,3,4,5]; // relative to white key index
+  for (let i = 0; i < blackPositions.length; i++) {
+    if (blackPositions[i] === null) continue;
+    // each black key sits between white keys
+    const whiteIdx = (i < 2) ? i : i + 1;
+    const x = 2 + whiteIdx * whiteW + whiteW * 0.65;
+    const pc = blacks[i];
+    if (pc === null) continue;
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', 2);
+    rect.setAttribute('width', blackW);
+    rect.setAttribute('height', blackH);
+    rect.setAttribute('class', pcSet.has(pc) ? 'piano-pressed-black' : 'piano-black');
+    rect.setAttribute('rx', 2);
+    svg.appendChild(rect);
+  }
+
+  container.innerHTML = `<div class="diagram-title">${formatChordDisplay(chordName)}</div>`;
+  container.appendChild(svg);
+}
+
+function renderDiagrams(row, chords, transposeAmt) {
+  row.innerHTML = '';
+  if (!state.showDiagrams || chords.length === 0) return;
+
+  const uniqueChords = [...new Set(chords)];
+  const instrument = state.instrument;
+
+  for (let i = 0; i < uniqueChords.length; i++) {
+    const transposed = transposeChord(uniqueChords[i], transposeAmt);
+    const card = document.createElement('div');
+    card.className = 'diagram-card';
+    if (state.selectedChord !== null && chords[state.selectedChord] === uniqueChords[i]) {
+      card.classList.add('active-diagram');
+    }
+
+    if (instrument === 'guitar') {
+      renderGuitarDiagram(card, transposed);
+    } else if (instrument === 'ukulele') {
+      renderUkuleleDiagram(card, transposed);
+    } else if (instrument === 'piano') {
+      renderPianoDiagram(card, transposed);
+    } else {
+      // Violin, bass — show note names
+      const tones = getChordTones(transposed);
+      const useFlats = FLAT_KEYS.has(tones[0]);
+      const names = tones.map(t => semiToName(t, useFlats));
+      card.innerHTML = `<div class="diagram-title">${formatChordDisplay(transposed)}</div>
+        <div style="color:var(--muted);font-size:13px;padding:4px">${names.join(' – ')}</div>`;
+    }
+
+    card.addEventListener('click', () => {
+      const idx = chords.indexOf(uniqueChords[i]);
+      state.selectedChord = idx >= 0 ? idx : null;
+      render();
+    });
+
+    row.appendChild(card);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHORD PROGRESSION DISPLAY
+// ═══════════════════════════════════════════════════════════════
+function renderChordGrid(grid, section, currentBar, transposeAmt) {
+  grid.innerHTML = '';
+  const bars = section.bars;
+  const barsPerLine = section.barsPerLine || 4;
+  const formLabels = section.formLabels || {};
+
+  for (let i = 0; i < bars.length; i++) {
+    // Form label
+    if (formLabels[i] !== undefined) {
+      const label = document.createElement('div');
+      label.className = 'chord-row-label';
+      label.textContent = formLabels[i];
+      grid.appendChild(label);
+    }
+
+    // Bar line at start of group (except first)
+    if (i > 0 && i % barsPerLine === 0 && !formLabels[i]) {
+      // Wrap to new visual line — the flex-wrap handles this naturally
+    }
+
+    const cell = document.createElement('div');
+    cell.className = 'chord-cell';
+    if (i === currentBar) cell.classList.add('active');
+
+    const transposed = transposeChord(bars[i], transposeAmt);
+    cell.innerHTML = `<span class="bar-num">${i + 1}</span>${formatChordDisplay(transposed)}`;
+
+    cell.addEventListener('click', () => {
+      state.selectedChord = i;
+      render();
+    });
+
+    grid.appendChild(cell);
+
+    // Bar line separator
+    if ((i + 1) % barsPerLine === 0 && i < bars.length - 1 && !formLabels[i+1]) {
+      const sep = document.createElement('div');
+      sep.className = 'bar-line';
+      sep.style.display = 'none'; // Visual separation via flex-wrap
+      grid.appendChild(sep);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TIMELINE
+// ═══════════════════════════════════════════════════════════════
+function renderTimeline(container, currentIdx) {
+  container.innerHTML = '';
+  for (let i = 0; i < 12; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'tl-cell';
+    if (i === currentIdx) cell.classList.add('tl-active');
+    if (i < currentIdx && state.mode !== 'manual') cell.classList.add('tl-past');
+
+    const shortName = SECTIONS[i].name.split(' ').slice(0, 2).join(' ');
+    cell.innerHTML = `<span class="tl-num">${i + 1}</span><span class="tl-name">${shortName}</span>`;
+
+    cell.addEventListener('click', () => {
+      if (state.mode === 'manual') {
+        state.currentSection = i;
+        state.selectedChord = null;
+        render();
+      } else if (state.mode === 'timer') {
+        // Jump to this section in timer mode
+        const targetMins = i * 5;
+        state.timerStart = Date.now() - (targetMins / state.speed) * 60000;
+        state.selectedChord = null;
+        render();
+      }
+    });
+
+    container.appendChild(cell);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════════════════════
+const els = {
+  sectionCard: document.getElementById('sectionCard'),
+  sectionNum: document.getElementById('sectionNum'),
+  sectionName: document.getElementById('sectionName'),
+  sectionDesc: document.getElementById('sectionDesc'),
+  feelPill: document.getElementById('feelPill'),
+  keyPill: document.getElementById('keyPill'),
+  timeDisplay: document.getElementById('timeDisplay'),
+  transitionBanner: document.getElementById('transitionBanner'),
+  nextSectionName: document.getElementById('nextSectionName'),
+  transCountdown: document.getElementById('transCountdown'),
+  progressBar: document.getElementById('progressBar'),
+  chordGrid: document.getElementById('chordGrid'),
+  notationContainer: document.getElementById('notationContainer'),
+  notationCard: document.getElementById('notationCard'),
+  diagramsRow: document.getElementById('diagramsRow'),
+  diagramArea: document.getElementById('diagramArea'),
+  timeline: document.getElementById('timeline'),
+  speedSlider: document.getElementById('speedSlider'),
+  speedVal: document.getElementById('speedVal'),
+  instrumentSel: document.getElementById('instrumentSel'),
+  transposeSel: document.getElementById('transposeSel'),
+  showNotation: document.getElementById('showNotation'),
+  showDiagrams: document.getElementById('showDiagrams'),
+  audioEnabled: document.getElementById('audioEnabled'),
+  speedRow: document.getElementById('speedRow'),
+  manualRow: document.getElementById('manualRow'),
+};
+
+let lastRenderedSection = -1;
+let lastTransitioning = false;
+
+function render() {
+  const c = computeState();
+  const section = SECTIONS[c.sectionIdx];
+  const transposeAmt = state.transpose;
+
+  // Section info
+  els.sectionNum.textContent = `Section ${c.sectionIdx + 1} of 12`;
+  els.sectionName.textContent = section.name;
+  els.sectionDesc.textContent = section.description;
+  els.feelPill.textContent = section.feel;
+  els.keyPill.textContent = `Key of ${transposeKey(section.key, transposeAmt)}`;
+
+  // Time
+  const mins = Math.floor(c.secsRemaining / 60);
+  const secs = Math.floor(c.secsRemaining % 60);
+  els.timeDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+  // Progress bar
+  els.progressBar.style.width = `${c.progress * 100}%`;
+
+  // Transition state
+  if (c.isTransitioning) {
+    els.sectionCard.classList.add('transitioning');
+    const nextIdx = Math.min(c.sectionIdx + 1, 11);
+    els.nextSectionName.textContent = SECTIONS[nextIdx].name;
+    els.transCountdown.textContent = `${Math.ceil(c.transitionSecs)}s`;
+
+    // Play audio on transition start
+    if (!lastTransitioning && state.audioEnabled) {
+      playOceanSweep(Math.min(c.transitionSecs, TRANSITION_TIME));
+    }
+  } else {
+    els.sectionCard.classList.remove('transitioning');
+  }
+  lastTransitioning = c.isTransitioning;
+
+  // Only re-render heavy content when section changes or forced
+  const sectionChanged = c.sectionIdx !== lastRenderedSection;
+  if (sectionChanged) {
+    state.selectedChord = null;
+    lastRenderedSection = c.sectionIdx;
+
+    // Chord grid
+    renderChordGrid(els.chordGrid, section, c.currentBar, transposeAmt);
+
+    // Notation
+    els.notationCard.style.display = state.showNotation ? '' : 'none';
+    renderNotation(els.notationContainer, section.bars, transposeAmt);
+
+    // Diagrams
+    els.diagramArea.style.display = state.showDiagrams ? '' : 'none';
+    renderDiagrams(els.diagramsRow, section.bars, transposeAmt);
+
+    // Timeline
+    renderTimeline(els.timeline, c.sectionIdx);
+  } else {
+    // Update active chord highlight
+    const cells = els.chordGrid.querySelectorAll('.chord-cell');
+    cells.forEach((cell, i) => {
+      cell.classList.toggle('active', i === c.currentBar);
+    });
+  }
+}
+
+function fullRender() {
+  lastRenderedSection = -1;
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════════════════════════
+
+// Mode buttons
+document.getElementById('modeGroup').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-mode]');
+  if (!btn) return;
+  const mode = btn.dataset.mode;
+  state.mode = mode;
+
+  // Update button styles
+  document.querySelectorAll('#modeGroup .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Show/hide speed vs manual controls
+  els.speedRow.style.display = mode === 'timer' ? '' : 'none';
+  els.manualRow.style.display = mode === 'manual' ? '' : 'none';
+
+  if (mode === 'timer') {
+    state.timerStart = Date.now() - (state.currentSection * 5 / state.speed) * 60000;
+  }
+  fullRender();
+});
+
+// Speed slider
+els.speedSlider.addEventListener('input', () => {
+  state.speed = parseFloat(els.speedSlider.value);
+  els.speedVal.textContent = state.speed + 'x';
+});
+
+// Manual navigation
+document.getElementById('prevBtn').addEventListener('click', () => {
+  state.currentSection = Math.max(0, state.currentSection - 1);
+  fullRender();
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  state.currentSection = Math.min(11, state.currentSection + 1);
+  fullRender();
+});
+
+// Instrument
+els.instrumentSel.addEventListener('change', () => {
+  state.instrument = els.instrumentSel.value;
+  fullRender();
+});
+
+// Transpose
+els.transposeSel.addEventListener('change', () => {
+  state.transpose = parseInt(els.transposeSel.value, 10);
+  fullRender();
+});
+
+// Display toggles
+els.showNotation.addEventListener('change', () => {
+  state.showNotation = els.showNotation.checked;
+  fullRender();
+});
+els.showDiagrams.addEventListener('change', () => {
+  state.showDiagrams = els.showDiagrams.checked;
+  fullRender();
+});
+els.audioEnabled.addEventListener('change', () => {
+  state.audioEnabled = els.audioEnabled.checked;
+});
+
+// Controls collapse
+document.getElementById('controlsToggle').addEventListener('click', () => {
+  const panel = document.getElementById('controlsPanel');
+  panel.classList.toggle('collapsed');
+  document.getElementById('controlsArrow').textContent = panel.classList.contains('collapsed') ? '▶' : '▼';
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (state.mode === 'manual') {
+      state.currentSection = Math.max(0, state.currentSection - 1);
+      fullRender();
+    }
+  } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (state.mode === 'manual') {
+      state.currentSection = Math.min(11, state.currentSection + 1);
+      fullRender();
+    }
+  } else if (e.key === ' ') {
+    e.preventDefault();
+    // Toggle mode or advance in manual
+    if (state.mode === 'manual') {
+      state.currentSection = Math.min(11, state.currentSection + 1);
+      fullRender();
+    }
+  }
+});
+
+// Touch: enable audio context on first interaction
+document.addEventListener('click', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
+// ═══════════════════════════════════════════════════════════════
+// INIT & UPDATE LOOP
+// ═══════════════════════════════════════════════════════════════
+
+// Initial setup
+els.speedRow.style.display = 'none'; // hidden by default (realtime mode)
+fullRender();
+
+// Update every second
+setInterval(() => {
+  if (state.mode !== 'manual') {
+    render();
+  }
+}, 1000);
+</script>
+</body>
+</html>
