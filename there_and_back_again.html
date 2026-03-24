@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f7fb" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0e18" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>There and Back Again</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --text: #10213a;
+      --muted: #5a6f8c;
+      --line: rgba(16, 33, 58, 0.12);
+      --accent: #e03050;
+      --accent-glow: rgba(224, 48, 80, 0.35);
+      --accent-soft: rgba(224, 48, 80, 0.12);
+      --play: #1da855;
+      --play-glow: rgba(29, 168, 85, 0.35);
+      --play-soft: rgba(29, 168, 85, 0.12);
+      --meter-bg: rgba(16, 33, 58, 0.08);
+      --meter-fill: #0075ff;
+      --radius: 16px;
+      --font: "SF Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a0e18;
+        --surface: #141a28;
+        --text: #e8eef8;
+        --muted: #7a8da8;
+        --line: rgba(232, 238, 248, 0.1);
+        --accent: #ff4466;
+        --accent-glow: rgba(255, 68, 102, 0.4);
+        --accent-soft: rgba(255, 68, 102, 0.15);
+        --play: #34d475;
+        --play-glow: rgba(52, 212, 117, 0.4);
+        --play-soft: rgba(52, 212, 117, 0.15);
+        --meter-bg: rgba(232, 238, 248, 0.06);
+        --meter-fill: #61a7ff;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* --- Header --- */
+    .header {
+      padding: 12px 16px 8px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .header .sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* --- Settings panel --- */
+    .settings {
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      padding: 6px 14px;
+      cursor: pointer;
+      margin: 0 auto;
+      font-family: var(--font);
+    }
+    .settings-toggle:hover { border-color: var(--muted); }
+    .settings-toggle .arrow { transition: transform 0.2s; }
+    .settings-toggle.open .arrow { transform: rotate(180deg); }
+
+    .settings-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .settings-body.open {
+      max-height: 400px;
+    }
+    .settings-inner {
+      padding: 10px 0 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .field select, .field input[type="range"] {
+      width: 100%;
+      font-family: var(--font);
+    }
+    .field select {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.88rem;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8da8'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .range-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+    .range-val {
+      font-size: 0.82rem;
+      color: var(--muted);
+      min-width: 3.5em;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .info-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .info-pill {
+      font-size: 0.75rem;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 10px;
+    }
+
+    /* --- Main area --- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 16px;
+      min-height: 0;
+    }
+
+    /* --- Level meter --- */
+    .meter-wrap {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .meter-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .meter {
+      width: 100%;
+      height: 8px;
+      background: var(--meter-bg);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .meter-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--meter-fill);
+      border-radius: 4px;
+      transition: width 0.06s linear;
+    }
+    .meter-bar.hot {
+      background: var(--accent);
+    }
+
+    /* --- Waveform display --- */
+    .waveform-wrap {
+      width: 100%;
+      max-width: 320px;
+      height: 64px;
+      background: var(--meter-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .waveform-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .waveform-label {
+      position: absolute;
+      top: 4px;
+      left: 8px;
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+
+    /* --- Big button --- */
+    .btn-record {
+      width: clamp(120px, 40vw, 180px);
+      height: clamp(120px, 40vw, 180px);
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 var(--accent-glow);
+      transition: transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-record:active {
+      transform: scale(0.95);
+    }
+    .btn-record.recording {
+      box-shadow: 0 0 0 18px var(--accent-glow);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    .btn-record.playing {
+      background: var(--play);
+      box-shadow: 0 0 0 12px var(--play-glow);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 12px var(--accent-glow); }
+      50% { box-shadow: 0 0 0 24px transparent; }
+    }
+
+    .btn-icon {
+      width: 40%;
+      height: 40%;
+      fill: #fff;
+    }
+
+    .btn-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    /* --- Enable audio overlay --- */
+    .audio-gate {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 100;
+      transition: opacity 0.3s ease;
+    }
+    .audio-gate.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .audio-gate h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .audio-gate p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+      max-width: 28ch;
+    }
+    .btn-enable {
+      padding: 16px 40px;
+      border: none;
+      border-radius: 16px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+    .btn-enable:active { transform: scale(0.96); }
+
+    /* --- Status bar --- */
+    .status-bar {
+      padding: 8px 16px 12px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .status-bar .time {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn-record, .settings-body, .audio-gate { transition: none; }
+      .btn-record.recording { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Tap-to-enable audio overlay -->
+<div class="audio-gate" id="audioGate">
+  <h2>There and Back Again</h2>
+  <p>Record audio, then hear it played back in reverse.</p>
+  <button class="btn-enable" id="btnEnable">Tap to Enable Audio</button>
+</div>
+
+<!-- App -->
+<div class="header">
+  <h1>There and Back Again</h1>
+  <p class="sub">Record &middot; Reverse &middot; Listen</p>
+</div>
+
+<div class="settings">
+  <button class="settings-toggle" id="settingsToggle">
+    Settings <span class="arrow">&#9662;</span>
+  </button>
+  <div class="settings-body" id="settingsBody">
+    <div class="settings-inner">
+      <div class="field">
+        <label for="inputSelect">Input Device</label>
+        <select id="inputSelect"><option>Default</option></select>
+      </div>
+      <div class="field">
+        <label for="outputSelect">Output Device</label>
+        <select id="outputSelect"><option>Default</option></select>
+      </div>
+      <div class="field">
+        <label for="fadeIn">Reverse Fade-In</label>
+        <div class="range-row">
+          <input type="range" id="fadeIn" min="0" max="3" step="0.05" value="0.3" />
+          <span class="range-val" id="fadeInVal">0.30s</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="fadeOut">Reverse Fade-Out</label>
+        <div class="range-row">
+          <input type="range" id="fadeOut" min="0" max="3" step="0.05" value="0.1" />
+          <span class="range-val" id="fadeOutVal">0.10s</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="playbackRate">Playback Speed</label>
+        <div class="range-row">
+          <input type="range" id="playbackRate" min="0.25" max="2" step="0.05" value="1" />
+          <span class="range-val" id="playbackRateVal">1.00x</span>
+        </div>
+      </div>
+      <div class="info-row" id="infoRow"></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="meter-wrap">
+    <span class="meter-label">Input Level</span>
+    <div class="meter"><div class="meter-bar" id="meterBar"></div></div>
+  </div>
+
+  <div class="waveform-wrap">
+    <canvas id="waveformCanvas"></canvas>
+    <span class="waveform-label" id="waveformLabel">Idle</span>
+  </div>
+
+  <button class="btn-record" id="btnRecord" aria-label="Record">
+    <svg class="btn-icon" id="btnIcon" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="36" />
+    </svg>
+  </button>
+  <div class="btn-label" id="btnLabelText">Tap to record</div>
+</div>
+
+<div class="status-bar" id="statusBar">Ready</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // --- DOM refs ---
+  const audioGate     = document.getElementById("audioGate");
+  const btnEnable     = document.getElementById("btnEnable");
+  const settingsToggle= document.getElementById("settingsToggle");
+  const settingsBody  = document.getElementById("settingsBody");
+  const inputSelect   = document.getElementById("inputSelect");
+  const outputSelect  = document.getElementById("outputSelect");
+  const fadeInSlider   = document.getElementById("fadeIn");
+  const fadeInVal      = document.getElementById("fadeInVal");
+  const fadeOutSlider  = document.getElementById("fadeOut");
+  const fadeOutVal     = document.getElementById("fadeOutVal");
+  const rateSlider     = document.getElementById("playbackRate");
+  const rateVal        = document.getElementById("playbackRateVal");
+  const infoRow        = document.getElementById("infoRow");
+  const meterBar       = document.getElementById("meterBar");
+  const waveformCanvas = document.getElementById("waveformCanvas");
+  const waveformLabel  = document.getElementById("waveformLabel");
+  const btnRecord      = document.getElementById("btnRecord");
+  const btnIcon        = document.getElementById("btnIcon");
+  const btnLabelText   = document.getElementById("btnLabelText");
+  const statusBar      = document.getElementById("statusBar");
+
+  // --- State ---
+  let audioCtx = null;
+  let micStream = null;
+  let analyserNode = null;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let state = "idle"; // idle | recording | playing
+  let recordStartTime = 0;
+  let playbackSource = null;
+  let animFrame = null;
+
+  // --- Settings toggle ---
+  settingsToggle.addEventListener("click", () => {
+    settingsToggle.classList.toggle("open");
+    settingsBody.classList.toggle("open");
+  });
+
+  // --- Slider display ---
+  fadeInSlider.addEventListener("input", () => {
+    fadeInVal.textContent = parseFloat(fadeInSlider.value).toFixed(2) + "s";
+  });
+  fadeOutSlider.addEventListener("input", () => {
+    fadeOutVal.textContent = parseFloat(fadeOutSlider.value).toFixed(2) + "s";
+  });
+  rateSlider.addEventListener("input", () => {
+    rateVal.textContent = parseFloat(rateSlider.value).toFixed(2) + "x";
+  });
+
+  // --- Device enumeration ---
+  async function populateDevices() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      inputSelect.innerHTML = "";
+      outputSelect.innerHTML = "";
+
+      let inputCount = 0;
+      let outputCount = 0;
+
+      for (const d of devices) {
+        if (d.kind === "audioinput") {
+          inputCount++;
+          const opt = document.createElement("option");
+          opt.value = d.deviceId;
+          opt.textContent = d.label || `Microphone ${inputCount}`;
+          inputSelect.appendChild(opt);
+        } else if (d.kind === "audiooutput") {
+          outputCount++;
+          const opt = document.createElement("option");
+          opt.value = d.deviceId;
+          opt.textContent = d.label || `Speaker ${outputCount}`;
+          outputSelect.appendChild(opt);
+        }
+      }
+
+      if (!inputCount) inputSelect.innerHTML = "<option>No inputs found</option>";
+      if (!outputCount) outputSelect.innerHTML = "<option>Default</option>";
+    } catch (e) {
+      console.warn("Device enumeration failed:", e);
+    }
+  }
+
+  // --- Set output device on an element (if supported) ---
+  function setOutputDevice(el) {
+    if (el && typeof el.setSinkId === "function" && outputSelect.value) {
+      el.setSinkId(outputSelect.value).catch(() => {});
+    }
+  }
+
+  // --- Enable audio ---
+  btnEnable.addEventListener("click", async () => {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      await audioCtx.resume();
+
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+
+      await populateDevices();
+      setupAnalyser();
+      showInfo();
+
+      audioGate.classList.add("hidden");
+      startMeter();
+    } catch (err) {
+      statusBar.textContent = "Error: " + err.message;
+    }
+  });
+
+  // --- Input device change ---
+  inputSelect.addEventListener("change", async () => {
+    if (!audioCtx) return;
+    try {
+      if (micStream) micStream.getTracks().forEach(t => t.stop());
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: { exact: inputSelect.value },
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+      setupAnalyser();
+      showInfo();
+    } catch (err) {
+      statusBar.textContent = "Input error: " + err.message;
+    }
+  });
+
+  // --- Analyser setup ---
+  function setupAnalyser() {
+    if (analyserNode) {
+      try { analyserNode.disconnect(); } catch {}
+    }
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 2048;
+    analyserNode.smoothingTimeConstant = 0.8;
+    const source = audioCtx.createMediaStreamSource(micStream);
+    source.connect(analyserNode);
+  }
+
+  // --- Info pills ---
+  function showInfo() {
+    const track = micStream.getAudioTracks()[0];
+    const settings = track.getSettings ? track.getSettings() : {};
+    const ch = settings.channelCount || 1;
+    const sr = audioCtx.sampleRate;
+    infoRow.innerHTML = `
+      <span class="info-pill">Input: ${ch === 1 ? "Mono" : ch === 2 ? "Stereo" : ch + "ch"}</span>
+      <span class="info-pill">${sr} Hz</span>
+    `;
+  }
+
+  // --- Level meter ---
+  function startMeter() {
+    const data = new Uint8Array(analyserNode.fftSize);
+    function tick() {
+      analyserNode.getByteTimeDomainData(data);
+      let peak = 0;
+      for (let i = 0; i < data.length; i++) {
+        const v = Math.abs(data[i] - 128) / 128;
+        if (v > peak) peak = v;
+      }
+      const pct = Math.min(peak * 100 * 2, 100);
+      meterBar.style.width = pct + "%";
+      meterBar.classList.toggle("hot", pct > 85);
+      animFrame = requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
+  // --- Waveform drawing ---
+  function drawWaveform(audioBuffer, label) {
+    const ctx = waveformCanvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = waveformCanvas.getBoundingClientRect();
+    waveformCanvas.width = rect.width * dpr;
+    waveformCanvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const w = rect.width;
+    const h = rect.height;
+    const data = audioBuffer.getChannelData(0);
+    const step = Math.max(1, Math.floor(data.length / w));
+
+    ctx.clearRect(0, 0, w, h);
+
+    const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    ctx.strokeStyle = isDark ? "#61a7ff" : "#0075ff";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+
+    for (let x = 0; x < w; x++) {
+      const idx = Math.floor(x * data.length / w);
+      let min = 1, max = -1;
+      for (let j = 0; j < step; j++) {
+        const s = data[idx + j] || 0;
+        if (s < min) min = s;
+        if (s > max) max = s;
+      }
+      const yMin = (1 - max) * h / 2;
+      const yMax = (1 - min) * h / 2;
+      ctx.moveTo(x, yMin);
+      ctx.lineTo(x, yMax);
+    }
+    ctx.stroke();
+    waveformLabel.textContent = label;
+  }
+
+  function clearWaveform() {
+    const ctx = waveformCanvas.getContext("2d");
+    ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+    waveformLabel.textContent = "Idle";
+  }
+
+  // --- Main button logic ---
+  btnRecord.addEventListener("click", handleButton);
+
+  function handleButton() {
+    if (state === "idle") {
+      startRecording();
+    } else if (state === "recording") {
+      stopRecordingAndReverse();
+    } else if (state === "playing") {
+      stopPlayback();
+    }
+  }
+
+  function setButtonState(newState) {
+    state = newState;
+    btnRecord.classList.remove("recording", "playing");
+
+    if (newState === "idle") {
+      btnIcon.innerHTML = '<circle cx="50" cy="50" r="36" />';
+      btnLabelText.textContent = "Tap to record";
+      btnRecord.setAttribute("aria-label", "Record");
+    } else if (newState === "recording") {
+      btnRecord.classList.add("recording");
+      btnIcon.innerHTML = '<rect x="26" y="26" width="48" height="48" rx="6" />';
+      btnLabelText.textContent = "Tap to stop & reverse";
+      btnRecord.setAttribute("aria-label", "Stop recording");
+    } else if (newState === "playing") {
+      btnRecord.classList.add("playing");
+      btnIcon.innerHTML = '<rect x="26" y="26" width="48" height="48" rx="6" />';
+      btnLabelText.textContent = "Tap to stop";
+      btnRecord.setAttribute("aria-label", "Stop playback");
+    }
+  }
+
+  // --- Timer ---
+  let timerInterval = null;
+
+  function startTimer(prefix) {
+    recordStartTime = Date.now();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const elapsed = (Date.now() - recordStartTime) / 1000;
+      statusBar.innerHTML = `${prefix} <span class="time">${formatTime(elapsed)}</span>`;
+    }, 100);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = (sec % 60).toFixed(1);
+    return `${m}:${s.padStart(4, "0")}`;
+  }
+
+  // --- Recording ---
+  function startRecording() {
+    recordedChunks = [];
+    try {
+      mediaRecorder = new MediaRecorder(micStream, { mimeType: "audio/webm;codecs=opus" });
+    } catch {
+      mediaRecorder = new MediaRecorder(micStream);
+    }
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      processRecording();
+    };
+
+    mediaRecorder.start(100);
+    setButtonState("recording");
+    clearWaveform();
+    startTimer("Recording");
+  }
+
+  function stopRecordingAndReverse() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+    stopTimer();
+    statusBar.textContent = "Processing...";
+    setButtonState("idle");
+  }
+
+  // --- Process and play reversed ---
+  async function processRecording() {
+    if (!recordedChunks.length) {
+      statusBar.textContent = "No audio captured.";
+      return;
+    }
+
+    const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || "audio/webm" });
+
+    try {
+      const arrayBuf = await blob.arrayBuffer();
+      const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+
+      // Reverse each channel
+      const reversed = audioCtx.createBuffer(
+        audioBuf.numberOfChannels,
+        audioBuf.length,
+        audioBuf.sampleRate
+      );
+
+      for (let ch = 0; ch < audioBuf.numberOfChannels; ch++) {
+        const src = audioBuf.getChannelData(ch);
+        const dst = reversed.getChannelData(ch);
+        for (let i = 0; i < src.length; i++) {
+          dst[i] = src[src.length - 1 - i];
+        }
+      }
+
+      drawWaveform(reversed, "Reversed");
+      playReversed(reversed);
+    } catch (err) {
+      statusBar.textContent = "Decode error: " + err.message;
+    }
+  }
+
+  function playReversed(buffer) {
+    const fadeIn = parseFloat(fadeInSlider.value);
+    const fadeOut = parseFloat(fadeOutSlider.value);
+    const rate = parseFloat(rateSlider.value);
+
+    const gainNode = audioCtx.createGain();
+    gainNode.connect(audioCtx.destination);
+
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = rate;
+    source.connect(gainNode);
+
+    const duration = buffer.duration / rate;
+    const now = audioCtx.currentTime;
+
+    // Fade in
+    if (fadeIn > 0) {
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(1, now + Math.min(fadeIn, duration));
+    } else {
+      gainNode.gain.setValueAtTime(1, now);
+    }
+
+    // Fade out
+    if (fadeOut > 0 && duration > fadeOut) {
+      gainNode.gain.setValueAtTime(1, now + duration - fadeOut);
+      gainNode.gain.linearRampToValueAtTime(0, now + duration);
+    }
+
+    source.start(0);
+    playbackSource = source;
+    setButtonState("playing");
+    startTimer("Playing reversed");
+
+    source.onended = () => {
+      if (state === "playing") {
+        stopTimer();
+        setButtonState("idle");
+        statusBar.textContent = "Done. Tap to record again.";
+      }
+    };
+  }
+
+  function stopPlayback() {
+    if (playbackSource) {
+      try { playbackSource.stop(); } catch {}
+      playbackSource = null;
+    }
+    stopTimer();
+    setButtonState("idle");
+    statusBar.textContent = "Stopped. Tap to record.";
+  }
+
+  // --- Handle output device change ---
+  outputSelect.addEventListener("change", () => {
+    // setSinkId only works on HTMLMediaElement; for Web Audio we'd need
+    // AudioContext.setSinkId (Chrome 110+). Try it if available.
+    if (audioCtx && typeof audioCtx.setSinkId === "function" && outputSelect.value) {
+      audioCtx.setSinkId(outputSelect.value).catch(() => {});
+    }
+  });
+
+  // --- Prevent zoom on double-tap ---
+  let lastTap = 0;
+  document.addEventListener("touchend", (e) => {
+    const now = Date.now();
+    if (now - lastTap < 300) e.preventDefault();
+    lastTap = now;
+  }, { passive: false });
+
+})();
+</script>
+</body>
+</html>
