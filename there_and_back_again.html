@@ -4,269 +4,264 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f7fb" />
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0e18" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f0f2f5" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f19" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>There and Back Again</title>
   <style>
     :root {
-      --bg: #f4f7fb;
+      --bg: #f0f2f5;
       --surface: #ffffff;
-      --text: #10213a;
-      --muted: #5a6f8c;
-      --line: rgba(16, 33, 58, 0.12);
-      --accent: #e03050;
-      --accent-glow: rgba(224, 48, 80, 0.35);
-      --play: #1da855;
-      --play-glow: rgba(29, 168, 85, 0.35);
-      --meter-bg: rgba(16, 33, 58, 0.08);
-      --meter-fill: #0075ff;
-      --waveform: #0075ff;
-      --playhead: rgba(224, 48, 80, 0.8);
-      --radius: 16px;
+      --text: #1a1e2e;
+      --muted: #6b7a90;
+      --line: rgba(26, 30, 46, 0.1);
+      --rec: #e8334a;
+      --rec-glow: rgba(232, 51, 74, 0.3);
+      --play: #22b865;
+      --play-glow: rgba(34, 184, 101, 0.3);
+      --wave-rec: #e8334a;
+      --wave-play: #22b865;
+      --wave-idle: #5a7aff;
+      --wave-bg: rgba(26, 30, 46, 0.06);
+      --meter-bg: rgba(26, 30, 46, 0.07);
+      --meter-fill: #5a7aff;
+      --meter-hot: #e8334a;
+      --playhead: rgba(232, 51, 74, 0.75);
+      --track-empty: rgba(26, 30, 46, 0.08);
       --font: "SF Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0a0e18;
-        --surface: #141a28;
-        --text: #e8eef8;
-        --muted: #7a8da8;
-        --line: rgba(232, 238, 248, 0.1);
-        --accent: #ff4466;
-        --accent-glow: rgba(255, 68, 102, 0.4);
-        --play: #34d475;
-        --play-glow: rgba(52, 212, 117, 0.4);
-        --meter-bg: rgba(232, 238, 248, 0.06);
-        --meter-fill: #61a7ff;
-        --waveform: #61a7ff;
-        --playhead: rgba(255, 68, 102, 0.85);
+        --bg: #0b0f19;
+        --surface: #151b2a;
+        --text: #e4eaf4;
+        --muted: #7b8da6;
+        --line: rgba(228, 234, 244, 0.08);
+        --rec: #ff4d6a;
+        --rec-glow: rgba(255, 77, 106, 0.35);
+        --play: #3de87a;
+        --play-glow: rgba(61, 232, 122, 0.3);
+        --wave-rec: #ff4d6a;
+        --wave-play: #3de87a;
+        --wave-idle: #6e8fff;
+        --wave-bg: rgba(228, 234, 244, 0.04);
+        --meter-bg: rgba(228, 234, 244, 0.05);
+        --meter-fill: #6e8fff;
+        --meter-hot: #ff4d6a;
+        --playhead: rgba(255, 77, 106, 0.8);
+        --track-empty: rgba(228, 234, 244, 0.06);
       }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      touch-action: manipulation;
-    }
-
+    html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
     body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      display: flex; flex-direction: column;
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* --- Header --- */
-    .header {
-      padding: 12px 16px 6px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
-    .header .sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    /* Header */
+    .header { padding: 14px 16px 4px; text-align: center; flex-shrink: 0; }
+    .header h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+    .header .sub { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
 
-    /* --- Settings panel --- */
+    /* Settings */
     .settings { padding: 0 16px; flex-shrink: 0; }
     .settings-toggle {
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
       background: none; border: 1px solid var(--line); border-radius: 10px;
-      color: var(--muted); font-size: 0.82rem; padding: 6px 14px;
+      color: var(--muted); font-size: 0.78rem; padding: 5px 12px;
       cursor: pointer; margin: 0 auto; font-family: var(--font);
     }
     .settings-toggle:hover { border-color: var(--muted); }
-    .settings-toggle .arrow { transition: transform 0.2s; display: inline-block; }
+    .settings-toggle .arrow { transition: transform 0.2s; display: inline-block; font-size: 0.65rem; }
     .settings-toggle.open .arrow { transform: rotate(180deg); }
-
     .settings-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-    .settings-body.open { max-height: 500px; }
-    .settings-inner { padding: 10px 0 4px; display: flex; flex-direction: column; gap: 10px; }
-
-    .field { display: flex; flex-direction: column; gap: 4px; }
+    .settings-body.open { max-height: 520px; }
+    .settings-inner { padding: 10px 0 6px; display: flex; flex-direction: column; gap: 9px; }
+    .field { display: flex; flex-direction: column; gap: 3px; }
     .field label {
-      font-size: 0.75rem; color: var(--muted); font-weight: 600;
+      font-size: 0.7rem; color: var(--muted); font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
     .field select {
-      width: 100%; padding: 8px 10px; border: 1px solid var(--line);
+      width: 100%; padding: 7px 10px; border: 1px solid var(--line);
       border-radius: 10px; background: var(--surface); color: var(--text);
-      font-size: 0.88rem; font-family: var(--font);
+      font-size: 0.85rem; font-family: var(--font);
       appearance: none; -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8da8'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237b8da6'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 10px center;
     }
-    .range-row { display: flex; align-items: center; gap: 10px; }
-    .range-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+    .range-row { display: flex; align-items: center; gap: 8px; }
+    .range-row input[type="range"] { flex: 1; accent-color: var(--rec); height: 20px; }
     .range-val {
-      font-size: 0.82rem; color: var(--muted); min-width: 3.5em;
+      font-size: 0.78rem; color: var(--muted); min-width: 3.2em;
       text-align: right; font-variant-numeric: tabular-nums;
     }
-    .info-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .check-row { display: flex; align-items: center; gap: 8px; }
+    .check-row input[type="checkbox"] { accent-color: var(--play); width: 16px; height: 16px; }
+    .check-row label { font-size: 0.82rem; color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; }
+    .info-row { display: flex; gap: 8px; flex-wrap: wrap; }
     .info-pill {
-      font-size: 0.75rem; color: var(--muted);
-      border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+      font-size: 0.7rem; color: var(--muted);
+      border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px;
     }
 
-    /* --- Main area --- */
+    /* Main */
     .main {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 16px; padding: 12px 16px; min-height: 0;
+      gap: 14px; padding: 10px 16px; min-height: 0;
     }
 
-    /* --- Level meter --- */
+    /* Meter */
     .meter-wrap {
-      width: 100%; max-width: 320px;
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      width: 100%; max-width: 340px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
     }
-    .meter-label {
-      font-size: 0.72rem; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .meter {
-      width: 100%; height: 8px; background: var(--meter-bg);
-      border-radius: 4px; overflow: hidden;
-    }
+    .meter-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .meter { width: 100%; height: 6px; background: var(--meter-bg); border-radius: 3px; overflow: hidden; }
     .meter-bar {
-      height: 100%; width: 0%; background: var(--meter-fill);
-      border-radius: 4px; transition: width 0.06s linear;
+      height: 100%; width: 0%; border-radius: 3px;
+      background: var(--meter-fill); transition: width 0.05s linear;
     }
-    .meter-bar.hot { background: var(--accent); }
+    .meter-bar.hot { background: var(--meter-hot); }
 
-    /* --- Waveform display --- */
+    /* Track selector */
+    .tracks-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .track-pill {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 2px solid var(--line); background: var(--track-empty);
+      cursor: pointer; position: relative; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: var(--muted);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .track-pill.selected { border-color: var(--wave-idle); box-shadow: 0 0 0 3px rgba(90,122,255,0.2); }
+    .track-pill.has-audio { background: var(--wave-idle); color: #fff; border-color: var(--wave-idle); }
+    .track-pill.has-audio.selected { box-shadow: 0 0 0 3px rgba(90,122,255,0.35); }
+    .track-pill .clear-x {
+      position: absolute; top: -6px; right: -6px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--rec); color: #fff; font-size: 0.6rem;
+      display: none; align-items: center; justify-content: center;
+      line-height: 1; font-weight: 700; cursor: pointer;
+    }
+    .track-pill.has-audio .clear-x { display: flex; }
+    .tracks-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* Waveform */
     .waveform-wrap {
-      width: 100%; max-width: 320px; height: 64px;
-      background: var(--meter-bg); border-radius: 12px;
+      width: 100%; max-width: 340px; height: 72px;
+      background: var(--wave-bg); border-radius: 14px;
       overflow: hidden; position: relative;
     }
     .waveform-wrap canvas { width: 100%; height: 100%; display: block; }
     .waveform-label {
       position: absolute; top: 4px; left: 8px;
-      font-size: 0.65rem; color: var(--muted);
+      font-size: 0.6rem; color: var(--muted);
       text-transform: uppercase; letter-spacing: 0.04em; pointer-events: none;
     }
-    .playhead {
+    .playhead-line {
       position: absolute; top: 0; bottom: 0; left: 0;
       width: 2px; background: var(--playhead);
       pointer-events: none; display: none;
-      box-shadow: 0 0 6px var(--playhead);
+      box-shadow: 0 0 8px var(--playhead);
+      border-radius: 1px;
     }
 
-    /* --- Button row (record + secondary controls) --- */
-    .controls-row {
-      display: flex; align-items: center; gap: 20px;
-    }
+    /* Controls */
+    .controls-row { display: flex; align-items: center; gap: 18px; }
 
-    /* --- Big button --- */
     .btn-record {
-      width: clamp(110px, 36vw, 160px); height: clamp(110px, 36vw, 160px);
+      width: clamp(100px, 32vw, 150px); height: clamp(100px, 32vw, 150px);
       border-radius: 50%; border: none; cursor: pointer;
       position: relative; display: flex; align-items: center; justify-content: center;
-      background: var(--accent);
-      box-shadow: 0 0 0 0 var(--accent-glow);
+      background: var(--rec);
+      box-shadow: 0 0 0 0 var(--rec-glow);
       transition: transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn-record:active { transform: scale(0.95); }
+    .btn-record:active { transform: scale(0.94); }
     .btn-record.recording {
-      box-shadow: 0 0 0 18px var(--accent-glow);
-      animation: pulse 1.6s ease-in-out infinite;
+      box-shadow: 0 0 0 16px var(--rec-glow);
+      animation: pulse 1.5s ease-in-out infinite;
     }
     .btn-record.playing {
       background: var(--play);
-      box-shadow: 0 0 0 12px var(--play-glow);
+      box-shadow: 0 0 0 10px var(--play-glow);
     }
-    .btn-record.has-buffer:not(.recording):not(.playing) {
-      background: var(--play);
-    }
-
+    .btn-record.has-buffer:not(.recording):not(.playing) { background: var(--play); }
     @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 12px var(--accent-glow); }
-      50% { box-shadow: 0 0 0 24px transparent; }
+      0%, 100% { box-shadow: 0 0 0 10px var(--rec-glow); }
+      50% { box-shadow: 0 0 0 22px transparent; }
     }
+    .btn-icon { width: 38%; height: 38%; fill: #fff; }
+    .btn-label { font-size: 0.78rem; color: var(--muted); text-align: center; min-height: 1.1em; }
 
-    .btn-icon { width: 40%; height: 40%; fill: #fff; }
-
-    .btn-label {
-      font-size: 0.82rem; color: var(--muted); text-align: center; min-height: 1.2em;
-    }
-
-    /* --- Side action buttons --- */
     .side-btn {
-      width: 48px; height: 48px; border-radius: 50%;
+      width: 44px; height: 44px; border-radius: 50%;
       border: 1.5px solid var(--line); background: var(--surface);
       color: var(--muted); cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: border-color 0.15s, background 0.15s, opacity 0.2s;
-      font-size: 1.2rem; opacity: 0.35; pointer-events: none;
+      font-size: 1.1rem; opacity: 0.3; pointer-events: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .side-btn.active {
-      opacity: 1; pointer-events: auto;
-    }
-    .side-btn.on {
-      border-color: var(--play);
-      background: rgba(29, 168, 85, 0.12);
-      color: var(--play);
-    }
-    .side-btn:active { transform: scale(0.92); }
-    .side-btn svg { width: 22px; height: 22px; fill: currentColor; }
+    .side-btn.active { opacity: 1; pointer-events: auto; }
+    .side-btn.on { border-color: var(--play); background: rgba(34,184,101,0.1); color: var(--play); }
+    .side-btn:active { transform: scale(0.9); }
+    .side-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
-    /* --- Enable audio overlay --- */
+    /* Audio gate */
     .audio-gate {
       position: fixed; inset: 0; background: var(--bg);
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 16px;
+      align-items: center; justify-content: center; gap: 14px;
       z-index: 100; transition: opacity 0.3s ease;
     }
     .audio-gate.hidden { opacity: 0; pointer-events: none; }
-    .audio-gate h2 { font-size: 1.3rem; font-weight: 700; }
-    .audio-gate p { color: var(--muted); font-size: 0.95rem; text-align: center; max-width: 28ch; }
+    .audio-gate h2 { font-size: 1.25rem; font-weight: 700; }
+    .audio-gate p { color: var(--muted); font-size: 0.9rem; text-align: center; max-width: 26ch; line-height: 1.45; }
     .btn-enable {
-      padding: 16px 40px; border: none; border-radius: 16px;
-      background: var(--accent); color: #fff; font-size: 1.1rem;
+      padding: 14px 36px; border: none; border-radius: 16px;
+      background: var(--rec); color: #fff; font-size: 1.05rem;
       font-weight: 700; font-family: var(--font); cursor: pointer;
       transition: transform 0.12s ease;
     }
     .btn-enable:active { transform: scale(0.96); }
 
-    /* --- Status bar --- */
+    /* Status */
     .status-bar {
-      padding: 6px 16px 10px; text-align: center;
-      font-size: 0.75rem; color: var(--muted); flex-shrink: 0;
+      padding: 4px 16px 10px; text-align: center;
+      font-size: 0.72rem; color: var(--muted); flex-shrink: 0;
     }
     .status-bar .time { font-variant-numeric: tabular-nums; font-weight: 600; }
 
     @media (prefers-reduced-motion: reduce) {
-      .btn-record, .settings-body, .audio-gate, .side-btn { transition: none; }
+      .btn-record, .settings-body, .audio-gate, .side-btn, .track-pill { transition: none; }
       .btn-record.recording { animation: none; }
     }
   </style>
 </head>
 <body>
 
-<!-- Tap-to-enable audio overlay -->
 <div class="audio-gate" id="audioGate">
   <h2>There and Back Again</h2>
   <p>Record audio, then hear it played back in reverse.</p>
   <button class="btn-enable" id="btnEnable">Tap to Enable Audio</button>
 </div>
 
-<!-- App -->
 <div class="header">
   <h1>There and Back Again</h1>
   <p class="sub">Record &middot; Reverse &middot; Listen</p>
 </div>
 
 <div class="settings">
-  <button class="settings-toggle" id="settingsToggle">
-    &#9881;&#65039; Settings <span class="arrow">&#9662;</span>
-  </button>
+  <button class="settings-toggle" id="settingsToggle">&#9881;&#65039; Settings <span class="arrow">&#9662;</span></button>
   <div class="settings-body" id="settingsBody">
     <div class="settings-inner">
       <div class="field">
@@ -278,17 +273,17 @@
         <select id="outputSelect"><option>Default</option></select>
       </div>
       <div class="field">
-        <label for="inputGain">Input Gain</label>
+        <label for="inputGain">Input Gain (applied to recording)</label>
         <div class="range-row">
-          <input type="range" id="inputGain" min="0.5" max="10" step="0.1" value="3" />
-          <span class="range-val" id="inputGainVal">3.0x</span>
+          <input type="range" id="inputGain" min="1" max="20" step="0.5" value="5" />
+          <span class="range-val" id="inputGainVal">5.0x</span>
         </div>
       </div>
       <div class="field">
         <label for="fadeIn">Reverse Fade-In</label>
         <div class="range-row">
-          <input type="range" id="fadeIn" min="0" max="3" step="0.05" value="0.3" />
-          <span class="range-val" id="fadeInVal">0.30s</span>
+          <input type="range" id="fadeIn" min="0" max="3" step="0.05" value="0.25" />
+          <span class="range-val" id="fadeInVal">0.25s</span>
         </div>
       </div>
       <div class="field">
@@ -305,6 +300,10 @@
           <span class="range-val" id="playbackRateVal">1.00x</span>
         </div>
       </div>
+      <div class="check-row">
+        <input type="checkbox" id="normalizeCheck" checked />
+        <label for="normalizeCheck">Auto-normalize volume</label>
+      </div>
       <div class="info-row" id="infoRow"></div>
     </div>
   </div>
@@ -316,26 +315,27 @@
     <div class="meter"><div class="meter-bar" id="meterBar"></div></div>
   </div>
 
+  <!-- Track selector -->
+  <div class="tracks-row">
+    <span class="tracks-label">Tracks</span>
+    <div class="track-pill selected" data-track="0">1<span class="clear-x">&times;</span></div>
+    <div class="track-pill" data-track="1">2<span class="clear-x">&times;</span></div>
+    <div class="track-pill" data-track="2">3<span class="clear-x">&times;</span></div>
+  </div>
+
   <div class="waveform-wrap" id="waveformWrap">
     <canvas id="waveformCanvas"></canvas>
-    <div class="playhead" id="playhead"></div>
+    <div class="playhead-line" id="playhead"></div>
     <span class="waveform-label" id="waveformLabel">Idle</span>
   </div>
 
   <div class="controls-row">
-    <!-- Loop toggle -->
     <button class="side-btn" id="btnLoop" aria-label="Toggle loop" title="Loop">
       <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
     </button>
-
-    <!-- Main record / play / stop -->
     <button class="btn-record" id="btnRecord" aria-label="Record">
-      <svg class="btn-icon" id="btnIcon" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="36" />
-      </svg>
+      <svg class="btn-icon" id="btnIcon" viewBox="0 0 100 100"><circle cx="50" cy="50" r="36" /></svg>
     </button>
-
-    <!-- Fade-out button -->
     <button class="side-btn" id="btnFadeOut" aria-label="Fade out" title="Fade out now">
       <svg viewBox="0 0 24 24"><path d="M16 13h-3V3h-2v10H8l4 4 4-4zM4 19v2h16v-2H4z"/></svg>
     </button>
@@ -349,66 +349,78 @@
 (function () {
   "use strict";
 
-  // --- DOM refs ---
+  // --- DOM ---
   const audioGate      = document.getElementById("audioGate");
   const btnEnable      = document.getElementById("btnEnable");
   const settingsToggle = document.getElementById("settingsToggle");
   const settingsBody   = document.getElementById("settingsBody");
   const inputSelect    = document.getElementById("inputSelect");
   const outputSelect   = document.getElementById("outputSelect");
-  const inputGainSlider= document.getElementById("inputGain");
-  const inputGainVal   = document.getElementById("inputGainVal");
+  const gainSlider     = document.getElementById("inputGain");
+  const gainVal        = document.getElementById("inputGainVal");
   const fadeInSlider   = document.getElementById("fadeIn");
   const fadeInVal      = document.getElementById("fadeInVal");
   const fadeOutSlider  = document.getElementById("fadeOut");
   const fadeOutVal     = document.getElementById("fadeOutVal");
   const rateSlider     = document.getElementById("playbackRate");
   const rateVal        = document.getElementById("playbackRateVal");
+  const normalizeCheck = document.getElementById("normalizeCheck");
   const infoRow        = document.getElementById("infoRow");
   const meterBar       = document.getElementById("meterBar");
   const waveformCanvas = document.getElementById("waveformCanvas");
   const waveformLabel  = document.getElementById("waveformLabel");
-  const playhead       = document.getElementById("playhead");
+  const playheadEl     = document.getElementById("playhead");
   const btnRecord      = document.getElementById("btnRecord");
   const btnIcon        = document.getElementById("btnIcon");
   const btnLabelText   = document.getElementById("btnLabelText");
   const btnLoop        = document.getElementById("btnLoop");
   const btnFadeOut     = document.getElementById("btnFadeOut");
   const statusBar      = document.getElementById("statusBar");
+  const trackPills     = document.querySelectorAll(".track-pill");
+
+  // --- Icons ---
+  const ICON_REC  = '<circle cx="50" cy="50" r="36" />';
+  const ICON_STOP = '<rect x="26" y="26" width="48" height="48" rx="8" />';
+  const ICON_PLAY = '<polygon points="36,20 36,80 80,50" />';
 
   // --- State ---
   let audioCtx = null;
   let micStream = null;
   let analyserNode = null;
-  let meterGainNode = null;   // gain node for boosting meter signal
+  let recGainNode = null;       // gain that feeds BOTH analyser AND recorder
+  let recDestination = null;    // MediaStreamDestination for amplified recording
   let mediaRecorder = null;
   let recordedChunks = [];
-  let state = "idle";         // idle | recording | playing | ready
-  let recordStartTime = 0;
-  let playbackSource = null;
-  let playbackGainNode = null;
-  let reversedBuffer = null;  // keep for replay
+  let state = "idle";           // idle | recording | playing | ready
   let loopEnabled = false;
-  let playbackStartCtxTime = 0;
+
+  // Multi-track: 3 slots
+  let tracks = [null, null, null];   // each: AudioBuffer (reversed) or null
+  let activeTrack = 0;
+
+  // Playback
+  let playbackSources = [];    // array of { source, gain }
+  let playbackStartCtx = 0;
   let playbackDuration = 0;
   let playheadRAF = null;
 
-  // --- SVG icon fragments ---
-  const ICON_RECORD  = '<circle cx="50" cy="50" r="36" />';
-  const ICON_STOP    = '<rect x="26" y="26" width="48" height="48" rx="6" />';
-  const ICON_PLAY    = '<polygon points="34,20 34,80 78,50" />';
+  // Live waveform during recording
+  let liveWaveData = [];
+  let liveWaveRAF = null;
 
-  // --- Settings toggle ---
+  // Timer
+  let timerInterval = null;
+  let timerStart = 0;
+
+  // ===== Settings =====
   settingsToggle.addEventListener("click", () => {
     settingsToggle.classList.toggle("open");
     settingsBody.classList.toggle("open");
   });
-
-  // --- Slider displays ---
-  inputGainSlider.addEventListener("input", () => {
-    const v = parseFloat(inputGainSlider.value);
-    inputGainVal.textContent = v.toFixed(1) + "x";
-    if (meterGainNode) meterGainNode.gain.value = v;
+  gainSlider.addEventListener("input", () => {
+    const v = parseFloat(gainSlider.value);
+    gainVal.textContent = v.toFixed(1) + "x";
+    if (recGainNode) recGainNode.gain.value = v;
   });
   fadeInSlider.addEventListener("input", () => {
     fadeInVal.textContent = parseFloat(fadeInSlider.value).toFixed(2) + "s";
@@ -420,174 +432,176 @@
     rateVal.textContent = parseFloat(rateSlider.value).toFixed(2) + "x";
   });
 
-  // --- Loop toggle ---
+  // ===== Track pills =====
+  trackPills.forEach(pill => {
+    pill.addEventListener("click", (e) => {
+      if (e.target.classList.contains("clear-x")) {
+        // Clear this track
+        const idx = parseInt(pill.dataset.track);
+        tracks[idx] = null;
+        pill.classList.remove("has-audio");
+        if (idx === activeTrack) {
+          clearWaveform();
+        }
+        updateButtons();
+        return;
+      }
+      // Select track
+      const idx = parseInt(pill.dataset.track);
+      activeTrack = idx;
+      trackPills.forEach(p => p.classList.remove("selected"));
+      pill.classList.add("selected");
+      // Show this track's waveform
+      if (tracks[idx]) {
+        drawStaticWaveform(tracks[idx], "Track " + (idx + 1) + " \u2013 reversed", getComputedStyle(document.documentElement).getPropertyValue("--wave-idle").trim());
+      } else {
+        clearWaveform();
+      }
+    });
+  });
+
+  function updateTrackPills() {
+    trackPills.forEach((pill, i) => {
+      pill.classList.toggle("has-audio", !!tracks[i]);
+    });
+  }
+
+  // ===== Loop =====
   btnLoop.addEventListener("click", () => {
     loopEnabled = !loopEnabled;
     btnLoop.classList.toggle("on", loopEnabled);
   });
 
-  // --- Fade-out button ---
+  // ===== Fade-out =====
   btnFadeOut.addEventListener("click", () => {
-    if (state === "playing" && playbackGainNode && audioCtx) {
+    if (state === "playing" && audioCtx) {
       const now = audioCtx.currentTime;
-      playbackGainNode.gain.cancelScheduledValues(now);
-      playbackGainNode.gain.setValueAtTime(playbackGainNode.gain.value, now);
-      playbackGainNode.gain.linearRampToValueAtTime(0, now + 0.6);
-      // Stop source after fade completes
-      setTimeout(() => {
-        if (state === "playing") finishPlayback("Faded out. Tap to replay.");
-      }, 650);
+      playbackSources.forEach(ps => {
+        ps.gain.gain.cancelScheduledValues(now);
+        ps.gain.gain.setValueAtTime(ps.gain.gain.value, now);
+        ps.gain.gain.linearRampToValueAtTime(0, now + 0.5);
+      });
+      setTimeout(() => { if (state === "playing") finishPlayback("Faded out."); }, 550);
     }
   });
 
-  // --- Device enumeration ---
+  // ===== Devices =====
   async function populateDevices() {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
-      inputSelect.innerHTML = "";
-      outputSelect.innerHTML = "";
+      inputSelect.innerHTML = ""; outputSelect.innerHTML = "";
       let ic = 0, oc = 0;
       for (const d of devices) {
-        if (d.kind === "audioinput") {
-          ic++;
-          const opt = document.createElement("option");
-          opt.value = d.deviceId;
-          opt.textContent = d.label || ("Microphone " + ic);
-          inputSelect.appendChild(opt);
-        } else if (d.kind === "audiooutput") {
-          oc++;
-          const opt = document.createElement("option");
-          opt.value = d.deviceId;
-          opt.textContent = d.label || ("Speaker " + oc);
-          outputSelect.appendChild(opt);
-        }
+        const opt = document.createElement("option");
+        opt.value = d.deviceId;
+        if (d.kind === "audioinput") { ic++; opt.textContent = d.label || "Mic " + ic; inputSelect.appendChild(opt); }
+        else if (d.kind === "audiooutput") { oc++; opt.textContent = d.label || "Speaker " + oc; outputSelect.appendChild(opt); }
       }
-      if (!ic) inputSelect.innerHTML = "<option>No inputs found</option>";
+      if (!ic) inputSelect.innerHTML = "<option>No inputs</option>";
       if (!oc) outputSelect.innerHTML = "<option>Default</option>";
-    } catch (e) {
-      console.warn("Device enumeration failed:", e);
-    }
+    } catch (e) { console.warn("Device enum failed", e); }
   }
 
-  // --- Enable audio ---
+  // ===== Enable audio =====
   btnEnable.addEventListener("click", async () => {
     try {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       await audioCtx.resume();
-
       micStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: true   // keep AGC on by default for mobile
-        }
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true }
       });
-
       await populateDevices();
-      setupAnalyser();
+      buildAudioGraph();
       showInfo();
       audioGate.classList.add("hidden");
       startMeter();
-    } catch (err) {
-      statusBar.textContent = "Error: " + err.message;
-    }
+    } catch (err) { statusBar.textContent = "Error: " + err.message; }
   });
 
-  // --- Input device change ---
   inputSelect.addEventListener("change", async () => {
     if (!audioCtx) return;
     try {
       if (micStream) micStream.getTracks().forEach(t => t.stop());
       micStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          deviceId: { exact: inputSelect.value },
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: true
-        }
+        audio: { deviceId: { exact: inputSelect.value }, echoCancellation: false, noiseSuppression: false, autoGainControl: true }
       });
-      setupAnalyser();
+      buildAudioGraph();
       showInfo();
-    } catch (err) {
-      statusBar.textContent = "Input error: " + err.message;
+    } catch (err) { statusBar.textContent = "Input error: " + err.message; }
+  });
+
+  outputSelect.addEventListener("change", () => {
+    if (audioCtx && typeof audioCtx.setSinkId === "function" && outputSelect.value) {
+      audioCtx.setSinkId(outputSelect.value).catch(() => {});
     }
   });
 
-  // --- Analyser setup (with gain boost for metering) ---
-  function setupAnalyser() {
-    if (analyserNode) { try { analyserNode.disconnect(); } catch {} }
-    if (meterGainNode) { try { meterGainNode.disconnect(); } catch {} }
+  // ===== Audio graph: mic -> GainNode -> analyser (for meter + live waveform)
+  //                                    -> MediaStreamDestination (for recorder) =====
+  function buildAudioGraph() {
+    const src = audioCtx.createMediaStreamSource(micStream);
 
-    const source = audioCtx.createMediaStreamSource(micStream);
-
-    // Gain node to boost quiet signals for the meter (does NOT affect recording)
-    meterGainNode = audioCtx.createGain();
-    meterGainNode.gain.value = parseFloat(inputGainSlider.value);
+    recGainNode = audioCtx.createGain();
+    recGainNode.gain.value = parseFloat(gainSlider.value);
 
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 2048;
-    analyserNode.smoothingTimeConstant = 0.7;
+    analyserNode.smoothingTimeConstant = 0.65;
 
-    source.connect(meterGainNode);
-    meterGainNode.connect(analyserNode);
-    // Don't connect analyser to destination — meter only
+    // MediaStreamDestination captures the amplified signal for MediaRecorder
+    recDestination = audioCtx.createMediaStreamDestination();
+
+    src.connect(recGainNode);
+    recGainNode.connect(analyserNode);       // for metering / live waveform
+    recGainNode.connect(recDestination);     // for recording (gain-boosted!)
   }
 
-  // --- Info pills ---
   function showInfo() {
-    const track = micStream.getAudioTracks()[0];
-    const s = track.getSettings ? track.getSettings() : {};
+    const t = micStream.getAudioTracks()[0];
+    const s = t.getSettings ? t.getSettings() : {};
     const ch = s.channelCount || 1;
-    const sr = audioCtx.sampleRate;
     infoRow.innerHTML =
       '<span class="info-pill">Input: ' + (ch === 1 ? "Mono" : ch === 2 ? "Stereo" : ch + "ch") + '</span>' +
-      '<span class="info-pill">' + sr + ' Hz</span>';
+      '<span class="info-pill">' + audioCtx.sampleRate + ' Hz</span>';
   }
 
-  // --- Level meter (uses float data for accuracy) ---
+  // ===== Meter =====
   function startMeter() {
     const buf = new Float32Array(analyserNode.fftSize);
-    function tick() {
+    (function tick() {
       analyserNode.getFloatTimeDomainData(buf);
       let peak = 0;
-      for (let i = 0; i < buf.length; i++) {
-        const v = Math.abs(buf[i]);
-        if (v > peak) peak = v;
-      }
-      // Map 0..1 to 0..100, clamp
+      for (let i = 0; i < buf.length; i++) { const v = Math.abs(buf[i]); if (v > peak) peak = v; }
       const pct = Math.min(peak * 100, 100);
       meterBar.style.width = pct + "%";
-      meterBar.classList.toggle("hot", pct > 85);
+      meterBar.classList.toggle("hot", pct > 80);
       requestAnimationFrame(tick);
-    }
-    tick();
+    })();
   }
 
-  // --- Waveform drawing ---
-  function drawWaveform(audioBuffer, label) {
+  // ===== Waveform drawing =====
+  function getCanvasCtx() {
     const ctx = waveformCanvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
     const rect = waveformCanvas.getBoundingClientRect();
     waveformCanvas.width = rect.width * dpr;
     waveformCanvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
-    const w = rect.width, h = rect.height;
-    const data = audioBuffer.getChannelData(0);
-    const step = Math.max(1, Math.floor(data.length / w));
-    ctx.clearRect(0, 0, w, h);
+    return { ctx, w: rect.width, h: rect.height };
+  }
 
-    const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    ctx.strokeStyle = isDark ? "#61a7ff" : "#0075ff";
+  function drawStaticWaveform(audioBuffer, label, color) {
+    const { ctx, w, h } = getCanvasCtx();
+    const data = audioBuffer.getChannelData(0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = color;
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     for (let x = 0; x < w; x++) {
       const idx = Math.floor(x * data.length / w);
+      const step = Math.max(1, Math.floor(data.length / w));
       let min = 1, max = -1;
-      for (let j = 0; j < step; j++) {
-        const s = data[idx + j] || 0;
-        if (s < min) min = s;
-        if (s > max) max = s;
-      }
+      for (let j = 0; j < step; j++) { const s = data[idx + j] || 0; if (s < min) min = s; if (s > max) max = s; }
       ctx.moveTo(x, (1 - max) * h / 2);
       ctx.lineTo(x, (1 - min) * h / 2);
     }
@@ -595,266 +609,346 @@
     waveformLabel.textContent = label;
   }
 
-  function clearWaveform() {
-    const ctx = waveformCanvas.getContext("2d");
-    ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
-    waveformLabel.textContent = "Idle";
-    playhead.style.display = "none";
-  }
-
-  // --- Playhead animation ---
-  function startPlayhead() {
-    const wrap = document.getElementById("waveformWrap");
-    const wrapWidth = wrap.getBoundingClientRect().width;
-    playhead.style.display = "block";
+  // Live waveform: accumulate peak data, draw progressively
+  function startLiveWaveform() {
+    liveWaveData = [];
+    const buf = new Float32Array(analyserNode.fftSize);
+    const samplesPerPixel = 512; // how many analyser reads per "pixel column"
+    let sampleAcc = 0;
+    let localMin = 0, localMax = 0;
 
     function tick() {
-      if (state !== "playing") { playhead.style.display = "none"; return; }
-      const elapsed = audioCtx.currentTime - playbackStartCtxTime;
-      const progress = Math.min(elapsed / playbackDuration, 1);
-      playhead.style.left = (progress * wrapWidth) + "px";
-      if (progress < 1) {
-        playheadRAF = requestAnimationFrame(tick);
+      if (state !== "recording") return;
+      analyserNode.getFloatTimeDomainData(buf);
+
+      // Find peak in this frame
+      let frameMin = 0, frameMax = 0;
+      for (let i = 0; i < buf.length; i++) {
+        if (buf[i] < frameMin) frameMin = buf[i];
+        if (buf[i] > frameMax) frameMax = buf[i];
       }
+      localMin = Math.min(localMin, frameMin);
+      localMax = Math.max(localMax, frameMax);
+      sampleAcc++;
+
+      if (sampleAcc >= 2) { // ~every 2 animation frames, push a column
+        liveWaveData.push({ min: localMin, max: localMax });
+        localMin = 0; localMax = 0; sampleAcc = 0;
+      }
+
+      drawLiveWaveform();
+      liveWaveRAF = requestAnimationFrame(tick);
     }
     tick();
   }
 
+  function drawLiveWaveform() {
+    const { ctx, w, h } = getCanvasCtx();
+    ctx.clearRect(0, 0, w, h);
+
+    const cs = getComputedStyle(document.documentElement);
+    ctx.strokeStyle = cs.getPropertyValue("--wave-rec").trim();
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+
+    const total = liveWaveData.length;
+    if (total === 0) return;
+
+    // Show the most recent `w` columns, or stretch if fewer
+    const cols = Math.min(total, Math.floor(w));
+    const startIdx = Math.max(0, total - Math.floor(w));
+
+    for (let x = 0; x < cols; x++) {
+      const d = liveWaveData[startIdx + x];
+      const px = total <= w ? x : (w - cols + x);
+      ctx.moveTo(px, (1 - d.max) * h / 2);
+      ctx.lineTo(px, (1 - d.min) * h / 2);
+    }
+    ctx.stroke();
+    waveformLabel.textContent = "Recording\u2026";
+  }
+
+  function stopLiveWaveform() {
+    if (liveWaveRAF) cancelAnimationFrame(liveWaveRAF);
+  }
+
+  function clearWaveform() {
+    const ctx = waveformCanvas.getContext("2d");
+    ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+    waveformLabel.textContent = "Idle";
+    playheadEl.style.display = "none";
+  }
+
+  // ===== Playhead =====
+  function startPlayhead() {
+    const wrapW = document.getElementById("waveformWrap").getBoundingClientRect().width;
+    playheadEl.style.display = "block";
+    (function tick() {
+      if (state !== "playing") { playheadEl.style.display = "none"; return; }
+      const elapsed = audioCtx.currentTime - playbackStartCtx;
+      const progress = Math.min(elapsed / playbackDuration, 1);
+      playheadEl.style.left = (progress * wrapW) + "px";
+      if (progress < 1) playheadRAF = requestAnimationFrame(tick);
+    })();
+  }
   function stopPlayhead() {
     if (playheadRAF) cancelAnimationFrame(playheadRAF);
-    playhead.style.display = "none";
+    playheadEl.style.display = "none";
   }
 
-  // --- Side button enable/disable helpers ---
-  function updateSideButtons() {
-    // Loop: always available once we have a buffer
-    btnLoop.classList.toggle("active", !!reversedBuffer);
-    // Fade-out: only while playing
+  // ===== Button states =====
+  function updateButtons() {
+    const hasAny = tracks.some(t => t !== null);
+    btnLoop.classList.toggle("active", hasAny);
     btnFadeOut.classList.toggle("active", state === "playing");
-  }
-
-  // --- Main button logic ---
-  btnRecord.addEventListener("click", handleButton);
-
-  function handleButton() {
-    switch (state) {
-      case "idle":
-        startRecording();
-        break;
-      case "recording":
-        stopRecordingAndReverse();
-        break;
-      case "playing":
-        finishPlayback("Stopped. Tap to replay.");
-        break;
-      case "ready":
-        // Replay the stored reversed buffer
-        playReversed(reversedBuffer);
-        break;
-    }
   }
 
   function setButtonState(newState) {
     state = newState;
     btnRecord.classList.remove("recording", "playing", "has-buffer");
+    const hasAny = tracks.some(t => t !== null);
 
     switch (newState) {
       case "idle":
-        btnIcon.innerHTML = ICON_RECORD;
+        btnIcon.innerHTML = ICON_REC;
         btnLabelText.textContent = "Tap to record";
-        btnRecord.setAttribute("aria-label", "Record");
         break;
       case "recording":
         btnRecord.classList.add("recording");
         btnIcon.innerHTML = ICON_STOP;
         btnLabelText.textContent = "Tap to stop & reverse";
-        btnRecord.setAttribute("aria-label", "Stop recording");
         break;
       case "playing":
         btnRecord.classList.add("playing");
         btnIcon.innerHTML = ICON_STOP;
         btnLabelText.textContent = "Tap to stop";
-        btnRecord.setAttribute("aria-label", "Stop playback");
         break;
       case "ready":
         btnRecord.classList.add("has-buffer");
-        btnIcon.innerHTML = ICON_PLAY;
-        btnLabelText.textContent = "Tap to replay";
-        btnRecord.setAttribute("aria-label", "Replay reversed audio");
+        btnIcon.innerHTML = hasAny ? ICON_PLAY : ICON_REC;
+        btnLabelText.textContent = hasAny ? "Tap to replay" : "Tap to record";
+        if (!hasAny) state = "idle"; // fall back
         break;
     }
-    updateSideButtons();
+    updateButtons();
   }
 
-  // --- Timer ---
-  let timerInterval = null;
+  // ===== Main button =====
+  btnRecord.addEventListener("click", () => {
+    switch (state) {
+      case "idle": startRecording(); break;
+      case "recording": stopRecordingAndProcess(); break;
+      case "playing": finishPlayback("Stopped."); break;
+      case "ready": playAllTracks(); break;
+    }
+  });
 
+  // ===== Timer =====
   function startTimer(prefix) {
-    recordStartTime = Date.now();
+    timerStart = Date.now();
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
-      const elapsed = (Date.now() - recordStartTime) / 1000;
-      statusBar.innerHTML = prefix + ' <span class="time">' + formatTime(elapsed) + '</span>';
+      const sec = (Date.now() - timerStart) / 1000;
+      const m = Math.floor(sec / 60);
+      const s = (sec % 60).toFixed(1).padStart(4, "0");
+      statusBar.innerHTML = prefix + ' <span class="time">' + m + ":" + s + '</span>';
     }, 100);
   }
-
   function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
 
-  function formatTime(sec) {
-    const m = Math.floor(sec / 60);
-    const s = (sec % 60).toFixed(1);
-    return m + ":" + s.padStart(4, "0");
-  }
-
-  // --- Recording ---
+  // ===== Recording =====
   function startRecording() {
     recordedChunks = [];
-    reversedBuffer = null;
+
+    // Record from the gain-boosted destination stream (not raw mic!)
+    const ampStream = recDestination.stream;
     try {
-      mediaRecorder = new MediaRecorder(micStream, { mimeType: "audio/webm;codecs=opus" });
+      mediaRecorder = new MediaRecorder(ampStream, { mimeType: "audio/webm;codecs=opus" });
     } catch {
-      mediaRecorder = new MediaRecorder(micStream);
+      try { mediaRecorder = new MediaRecorder(ampStream, { mimeType: "audio/webm" }); }
+      catch { mediaRecorder = new MediaRecorder(ampStream); }
     }
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) recordedChunks.push(e.data);
-    };
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
     mediaRecorder.onstop = () => processRecording();
 
     mediaRecorder.start(100);
     setButtonState("recording");
-    clearWaveform();
+    startLiveWaveform();
     startTimer("Recording");
   }
 
-  function stopRecordingAndReverse() {
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();
-    }
+  function stopRecordingAndProcess() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
     stopTimer();
+    stopLiveWaveform();
     statusBar.textContent = "Processing\u2026";
-    // Temporarily show idle while processing
-    btnIcon.innerHTML = ICON_RECORD;
+    btnIcon.innerHTML = ICON_REC;
     btnLabelText.textContent = "Processing\u2026";
   }
 
-  // --- Process and play reversed ---
   async function processRecording() {
     if (!recordedChunks.length) {
       statusBar.textContent = "No audio captured.";
       setButtonState("idle");
       return;
     }
-
     const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || "audio/webm" });
-
     try {
       const arrayBuf = await blob.arrayBuffer();
-      const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+      let audioBuf = await audioCtx.decodeAudioData(arrayBuf);
 
-      // Reverse each channel
-      const reversed = audioCtx.createBuffer(
-        audioBuf.numberOfChannels, audioBuf.length, audioBuf.sampleRate
-      );
+      // Normalize if enabled
+      if (normalizeCheck.checked) {
+        audioBuf = normalizeBuffer(audioBuf);
+      }
+
+      // Reverse
+      const reversed = audioCtx.createBuffer(audioBuf.numberOfChannels, audioBuf.length, audioBuf.sampleRate);
       for (let ch = 0; ch < audioBuf.numberOfChannels; ch++) {
         const src = audioBuf.getChannelData(ch);
         const dst = reversed.getChannelData(ch);
-        for (let i = 0; i < src.length; i++) {
-          dst[i] = src[src.length - 1 - i];
-        }
+        for (let i = 0; i < src.length; i++) dst[i] = src[src.length - 1 - i];
       }
 
-      reversedBuffer = reversed;
-      drawWaveform(reversed, "Reversed");
-      playReversed(reversed);
+      // Store in active track
+      tracks[activeTrack] = reversed;
+      updateTrackPills();
+
+      const cs = getComputedStyle(document.documentElement);
+      drawStaticWaveform(reversed, "Track " + (activeTrack + 1) + " \u2013 reversed", cs.getPropertyValue("--wave-idle").trim());
+
+      playAllTracks();
     } catch (err) {
       statusBar.textContent = "Decode error: " + err.message;
       setButtonState("idle");
     }
   }
 
-  function playReversed(buffer) {
-    // Stop any existing playback cleanly
-    if (playbackSource) {
-      try { playbackSource.onended = null; playbackSource.stop(); } catch {}
+  function normalizeBuffer(buf) {
+    // Find global peak across all channels
+    let peak = 0;
+    for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let i = 0; i < d.length; i++) {
+        const v = Math.abs(d[i]);
+        if (v > peak) peak = v;
+      }
     }
+    if (peak === 0 || peak > 0.95) return buf; // already loud or silent
+
+    const scale = 0.95 / peak;
+    const norm = audioCtx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate);
+    for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+      const src = buf.getChannelData(ch);
+      const dst = norm.getChannelData(ch);
+      for (let i = 0; i < src.length; i++) dst[i] = src[i] * scale;
+    }
+    return norm;
+  }
+
+  // ===== Playback (all tracks layered) =====
+  function playAllTracks() {
+    stopAllSources();
     stopPlayhead();
+
+    const filledTracks = tracks.map((buf, i) => ({ buf, i })).filter(t => t.buf !== null);
+    if (!filledTracks.length) { setButtonState("idle"); return; }
 
     const fadeIn  = parseFloat(fadeInSlider.value);
     const fadeOut = parseFloat(fadeOutSlider.value);
     const rate    = parseFloat(rateSlider.value);
 
-    playbackGainNode = audioCtx.createGain();
-    playbackGainNode.connect(audioCtx.destination);
-
-    const source = audioCtx.createBufferSource();
-    source.buffer = buffer;
-    source.playbackRate.value = rate;
-    source.connect(playbackGainNode);
-
-    const duration = buffer.duration / rate;
+    let maxDuration = 0;
     const now = audioCtx.currentTime;
+    playbackSources = [];
 
-    // Fade in
-    if (fadeIn > 0) {
-      playbackGainNode.gain.setValueAtTime(0, now);
-      playbackGainNode.gain.linearRampToValueAtTime(1, now + Math.min(fadeIn, duration));
-    } else {
-      playbackGainNode.gain.setValueAtTime(1, now);
+    for (const t of filledTracks) {
+      const gainNode = audioCtx.createGain();
+      gainNode.connect(audioCtx.destination);
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = t.buf;
+      source.playbackRate.value = rate;
+      source.connect(gainNode);
+
+      const dur = t.buf.duration / rate;
+      if (dur > maxDuration) maxDuration = dur;
+
+      if (fadeIn > 0) {
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(1, now + Math.min(fadeIn, dur));
+      } else {
+        gainNode.gain.setValueAtTime(1, now);
+      }
+      if (fadeOut > 0 && dur > fadeOut + fadeIn) {
+        gainNode.gain.setValueAtTime(1, now + dur - fadeOut);
+        gainNode.gain.linearRampToValueAtTime(0, now + dur);
+      }
+
+      source.start(0);
+      playbackSources.push({ source, gain: gainNode });
+
+      source.onended = () => {
+        // When the longest track ends, handle loop or finish
+        if (state !== "playing") return;
+        const allDone = playbackSources.every(ps => {
+          try { return ps.source.buffer === null || true; } catch { return true; }
+        });
+        // Use a small delay to let all sources finish
+        setTimeout(() => {
+          if (state !== "playing") return;
+          if (audioCtx.currentTime >= playbackStartCtx + playbackDuration - 0.05) {
+            if (loopEnabled) {
+              playAllTracks();
+            } else {
+              finishPlayback("Done. Tap to replay.");
+            }
+          }
+        }, 50);
+      };
     }
 
-    // Fade out (auto, at end of buffer)
-    if (fadeOut > 0 && duration > fadeOut + fadeIn) {
-      playbackGainNode.gain.setValueAtTime(1, now + duration - fadeOut);
-      playbackGainNode.gain.linearRampToValueAtTime(0, now + duration);
-    }
+    playbackStartCtx = now;
+    playbackDuration = maxDuration;
 
-    source.start(0);
-    playbackSource = source;
-    playbackStartCtxTime = now;
-    playbackDuration = duration;
+    // Draw the active track's waveform in play color
+    if (tracks[activeTrack]) {
+      const cs = getComputedStyle(document.documentElement);
+      drawStaticWaveform(tracks[activeTrack], "Playing\u2026", cs.getPropertyValue("--wave-play").trim());
+    }
 
     setButtonState("playing");
-    startTimer("Playing reversed");
+    startTimer("Playing");
     startPlayhead();
+  }
 
-    source.onended = () => {
-      if (state !== "playing") return;
-      if (loopEnabled && reversedBuffer) {
-        // Seamless loop
-        stopTimer();
-        stopPlayhead();
-        playReversed(reversedBuffer);
-      } else {
-        finishPlayback("Done. Tap to replay.");
-      }
-    };
+  function stopAllSources() {
+    for (const ps of playbackSources) {
+      try { ps.source.onended = null; ps.source.stop(); } catch {}
+    }
+    playbackSources = [];
   }
 
   function finishPlayback(msg) {
-    if (playbackSource) {
-      try { playbackSource.onended = null; playbackSource.stop(); } catch {}
-      playbackSource = null;
-    }
+    stopAllSources();
     stopTimer();
     stopPlayhead();
-    // If we have a buffer, go to "ready" state so user can replay
-    if (reversedBuffer) {
+    const hasAny = tracks.some(t => t !== null);
+    if (hasAny) {
+      // Redraw in idle color
+      if (tracks[activeTrack]) {
+        const cs = getComputedStyle(document.documentElement);
+        drawStaticWaveform(tracks[activeTrack], "Track " + (activeTrack + 1) + " \u2013 reversed", cs.getPropertyValue("--wave-idle").trim());
+      }
       setButtonState("ready");
-      statusBar.textContent = msg || "Tap to replay.";
     } else {
+      clearWaveform();
       setButtonState("idle");
-      statusBar.textContent = msg || "Ready.";
     }
+    statusBar.textContent = msg || "Ready.";
   }
 
-  // --- Handle output device change ---
-  outputSelect.addEventListener("change", () => {
-    if (audioCtx && typeof audioCtx.setSinkId === "function" && outputSelect.value) {
-      audioCtx.setSinkId(outputSelect.value).catch(() => {});
-    }
-  });
-
-  // --- Prevent zoom on double-tap ---
+  // ===== Prevent double-tap zoom =====
   let lastTap = 0;
   document.addEventListener("touchend", (e) => {
     const now = Date.now();
