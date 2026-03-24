@@ -17,12 +17,12 @@
       --line: rgba(16, 33, 58, 0.12);
       --accent: #e03050;
       --accent-glow: rgba(224, 48, 80, 0.35);
-      --accent-soft: rgba(224, 48, 80, 0.12);
       --play: #1da855;
       --play-glow: rgba(29, 168, 85, 0.35);
-      --play-soft: rgba(29, 168, 85, 0.12);
       --meter-bg: rgba(16, 33, 58, 0.08);
       --meter-fill: #0075ff;
+      --waveform: #0075ff;
+      --playhead: rgba(224, 48, 80, 0.8);
       --radius: 16px;
       --font: "SF Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
     }
@@ -36,12 +36,12 @@
         --line: rgba(232, 238, 248, 0.1);
         --accent: #ff4466;
         --accent-glow: rgba(255, 68, 102, 0.4);
-        --accent-soft: rgba(255, 68, 102, 0.15);
         --play: #34d475;
         --play-glow: rgba(52, 212, 117, 0.4);
-        --play-soft: rgba(52, 212, 117, 0.15);
         --meter-bg: rgba(232, 238, 248, 0.06);
         --meter-fill: #61a7ff;
+        --waveform: #61a7ff;
+        --playhead: rgba(255, 68, 102, 0.85);
       }
     }
 
@@ -64,210 +64,115 @@
 
     /* --- Header --- */
     .header {
-      padding: 12px 16px 8px;
+      padding: 12px 16px 6px;
       text-align: center;
       flex-shrink: 0;
     }
-    .header h1 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-    }
-    .header .sub {
-      font-size: 0.78rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
+    .header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+    .header .sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
 
     /* --- Settings panel --- */
-    .settings {
-      padding: 0 16px;
-      flex-shrink: 0;
-    }
+    .settings { padding: 0 16px; flex-shrink: 0; }
     .settings-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: none;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      color: var(--muted);
-      font-size: 0.82rem;
-      padding: 6px 14px;
-      cursor: pointer;
-      margin: 0 auto;
-      font-family: var(--font);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: none; border: 1px solid var(--line); border-radius: 10px;
+      color: var(--muted); font-size: 0.82rem; padding: 6px 14px;
+      cursor: pointer; margin: 0 auto; font-family: var(--font);
     }
     .settings-toggle:hover { border-color: var(--muted); }
-    .settings-toggle .arrow { transition: transform 0.2s; }
+    .settings-toggle .arrow { transition: transform 0.2s; display: inline-block; }
     .settings-toggle.open .arrow { transform: rotate(180deg); }
 
-    .settings-body {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-    .settings-body.open {
-      max-height: 400px;
-    }
-    .settings-inner {
-      padding: 10px 0 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .settings-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .settings-body.open { max-height: 500px; }
+    .settings-inner { padding: 10px 0 4px; display: flex; flex-direction: column; gap: 10px; }
 
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    .field { display: flex; flex-direction: column; gap: 4px; }
     .field label {
-      font-size: 0.75rem;
-      color: var(--muted);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .field select, .field input[type="range"] {
-      width: 100%;
-      font-family: var(--font);
+      font-size: 0.75rem; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
     }
     .field select {
-      padding: 8px 10px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--surface);
-      color: var(--text);
-      font-size: 0.88rem;
-      appearance: none;
-      -webkit-appearance: none;
+      width: 100%; padding: 8px 10px; border: 1px solid var(--line);
+      border-radius: 10px; background: var(--surface); color: var(--text);
+      font-size: 0.88rem; font-family: var(--font);
+      appearance: none; -webkit-appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8da8'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
+      background-repeat: no-repeat; background-position: right 10px center;
     }
-
-    .range-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .range-row input[type="range"] {
-      flex: 1;
-      accent-color: var(--accent);
-    }
+    .range-row { display: flex; align-items: center; gap: 10px; }
+    .range-row input[type="range"] { flex: 1; accent-color: var(--accent); }
     .range-val {
-      font-size: 0.82rem;
-      color: var(--muted);
-      min-width: 3.5em;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
+      font-size: 0.82rem; color: var(--muted); min-width: 3.5em;
+      text-align: right; font-variant-numeric: tabular-nums;
     }
-
-    .info-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .info-row { display: flex; gap: 10px; flex-wrap: wrap; }
     .info-pill {
-      font-size: 0.75rem;
-      color: var(--muted);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 3px 10px;
+      font-size: 0.75rem; color: var(--muted);
+      border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
     }
 
     /* --- Main area --- */
     .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      padding: 16px;
-      min-height: 0;
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px; padding: 12px 16px; min-height: 0;
     }
 
     /* --- Level meter --- */
     .meter-wrap {
-      width: 100%;
-      max-width: 320px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
+      width: 100%; max-width: 320px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
     }
     .meter-label {
-      font-size: 0.72rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 0.72rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
     }
     .meter {
-      width: 100%;
-      height: 8px;
-      background: var(--meter-bg);
-      border-radius: 4px;
-      overflow: hidden;
+      width: 100%; height: 8px; background: var(--meter-bg);
+      border-radius: 4px; overflow: hidden;
     }
     .meter-bar {
-      height: 100%;
-      width: 0%;
-      background: var(--meter-fill);
-      border-radius: 4px;
-      transition: width 0.06s linear;
+      height: 100%; width: 0%; background: var(--meter-fill);
+      border-radius: 4px; transition: width 0.06s linear;
     }
-    .meter-bar.hot {
-      background: var(--accent);
-    }
+    .meter-bar.hot { background: var(--accent); }
 
     /* --- Waveform display --- */
     .waveform-wrap {
-      width: 100%;
-      max-width: 320px;
-      height: 64px;
-      background: var(--meter-bg);
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
+      width: 100%; max-width: 320px; height: 64px;
+      background: var(--meter-bg); border-radius: 12px;
+      overflow: hidden; position: relative;
     }
-    .waveform-wrap canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+    .waveform-wrap canvas { width: 100%; height: 100%; display: block; }
     .waveform-label {
-      position: absolute;
-      top: 4px;
-      left: 8px;
-      font-size: 0.65rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      pointer-events: none;
+      position: absolute; top: 4px; left: 8px;
+      font-size: 0.65rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.04em; pointer-events: none;
+    }
+    .playhead {
+      position: absolute; top: 0; bottom: 0; left: 0;
+      width: 2px; background: var(--playhead);
+      pointer-events: none; display: none;
+      box-shadow: 0 0 6px var(--playhead);
+    }
+
+    /* --- Button row (record + secondary controls) --- */
+    .controls-row {
+      display: flex; align-items: center; gap: 20px;
     }
 
     /* --- Big button --- */
     .btn-record {
-      width: clamp(120px, 40vw, 180px);
-      height: clamp(120px, 40vw, 180px);
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: clamp(110px, 36vw, 160px); height: clamp(110px, 36vw, 160px);
+      border-radius: 50%; border: none; cursor: pointer;
+      position: relative; display: flex; align-items: center; justify-content: center;
       background: var(--accent);
       box-shadow: 0 0 0 0 var(--accent-glow);
       transition: transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn-record:active {
-      transform: scale(0.95);
-    }
+    .btn-record:active { transform: scale(0.95); }
     .btn-record.recording {
       box-shadow: 0 0 0 18px var(--accent-glow);
       animation: pulse 1.6s ease-in-out infinite;
@@ -276,81 +181,69 @@
       background: var(--play);
       box-shadow: 0 0 0 12px var(--play-glow);
     }
+    .btn-record.has-buffer:not(.recording):not(.playing) {
+      background: var(--play);
+    }
 
     @keyframes pulse {
       0%, 100% { box-shadow: 0 0 0 12px var(--accent-glow); }
       50% { box-shadow: 0 0 0 24px transparent; }
     }
 
-    .btn-icon {
-      width: 40%;
-      height: 40%;
-      fill: #fff;
-    }
+    .btn-icon { width: 40%; height: 40%; fill: #fff; }
 
     .btn-label {
-      font-size: 0.85rem;
-      color: var(--muted);
-      text-align: center;
-      min-height: 1.2em;
+      font-size: 0.82rem; color: var(--muted); text-align: center; min-height: 1.2em;
     }
+
+    /* --- Side action buttons --- */
+    .side-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 1.5px solid var(--line); background: var(--surface);
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s, background 0.15s, opacity 0.2s;
+      font-size: 1.2rem; opacity: 0.35; pointer-events: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .side-btn.active {
+      opacity: 1; pointer-events: auto;
+    }
+    .side-btn.on {
+      border-color: var(--play);
+      background: rgba(29, 168, 85, 0.12);
+      color: var(--play);
+    }
+    .side-btn:active { transform: scale(0.92); }
+    .side-btn svg { width: 22px; height: 22px; fill: currentColor; }
 
     /* --- Enable audio overlay --- */
     .audio-gate {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      z-index: 100;
-      transition: opacity 0.3s ease;
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+      z-index: 100; transition: opacity 0.3s ease;
     }
-    .audio-gate.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .audio-gate h2 {
-      font-size: 1.3rem;
-      font-weight: 700;
-    }
-    .audio-gate p {
-      color: var(--muted);
-      font-size: 0.95rem;
-      text-align: center;
-      max-width: 28ch;
-    }
+    .audio-gate.hidden { opacity: 0; pointer-events: none; }
+    .audio-gate h2 { font-size: 1.3rem; font-weight: 700; }
+    .audio-gate p { color: var(--muted); font-size: 0.95rem; text-align: center; max-width: 28ch; }
     .btn-enable {
-      padding: 16px 40px;
-      border: none;
-      border-radius: 16px;
-      background: var(--accent);
-      color: #fff;
-      font-size: 1.1rem;
-      font-weight: 700;
-      font-family: var(--font);
-      cursor: pointer;
+      padding: 16px 40px; border: none; border-radius: 16px;
+      background: var(--accent); color: #fff; font-size: 1.1rem;
+      font-weight: 700; font-family: var(--font); cursor: pointer;
       transition: transform 0.12s ease;
     }
     .btn-enable:active { transform: scale(0.96); }
 
     /* --- Status bar --- */
     .status-bar {
-      padding: 8px 16px 12px;
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--muted);
-      flex-shrink: 0;
+      padding: 6px 16px 10px; text-align: center;
+      font-size: 0.75rem; color: var(--muted); flex-shrink: 0;
     }
-    .status-bar .time {
-      font-variant-numeric: tabular-nums;
-      font-weight: 600;
-    }
+    .status-bar .time { font-variant-numeric: tabular-nums; font-weight: 600; }
 
     @media (prefers-reduced-motion: reduce) {
-      .btn-record, .settings-body, .audio-gate { transition: none; }
+      .btn-record, .settings-body, .audio-gate, .side-btn { transition: none; }
       .btn-record.recording { animation: none; }
     }
   </style>
@@ -372,7 +265,7 @@
 
 <div class="settings">
   <button class="settings-toggle" id="settingsToggle">
-    Settings <span class="arrow">&#9662;</span>
+    &#9881;&#65039; Settings <span class="arrow">&#9662;</span>
   </button>
   <div class="settings-body" id="settingsBody">
     <div class="settings-inner">
@@ -383,6 +276,13 @@
       <div class="field">
         <label for="outputSelect">Output Device</label>
         <select id="outputSelect"><option>Default</option></select>
+      </div>
+      <div class="field">
+        <label for="inputGain">Input Gain</label>
+        <div class="range-row">
+          <input type="range" id="inputGain" min="0.5" max="10" step="0.1" value="3" />
+          <span class="range-val" id="inputGainVal">3.0x</span>
+        </div>
       </div>
       <div class="field">
         <label for="fadeIn">Reverse Fade-In</label>
@@ -416,16 +316,30 @@
     <div class="meter"><div class="meter-bar" id="meterBar"></div></div>
   </div>
 
-  <div class="waveform-wrap">
+  <div class="waveform-wrap" id="waveformWrap">
     <canvas id="waveformCanvas"></canvas>
+    <div class="playhead" id="playhead"></div>
     <span class="waveform-label" id="waveformLabel">Idle</span>
   </div>
 
-  <button class="btn-record" id="btnRecord" aria-label="Record">
-    <svg class="btn-icon" id="btnIcon" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="36" />
-    </svg>
-  </button>
+  <div class="controls-row">
+    <!-- Loop toggle -->
+    <button class="side-btn" id="btnLoop" aria-label="Toggle loop" title="Loop">
+      <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+    </button>
+
+    <!-- Main record / play / stop -->
+    <button class="btn-record" id="btnRecord" aria-label="Record">
+      <svg class="btn-icon" id="btnIcon" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="36" />
+      </svg>
+    </button>
+
+    <!-- Fade-out button -->
+    <button class="side-btn" id="btnFadeOut" aria-label="Fade out" title="Fade out now">
+      <svg viewBox="0 0 24 24"><path d="M16 13h-3V3h-2v10H8l4 4 4-4zM4 19v2h16v-2H4z"/></svg>
+    </button>
+  </div>
   <div class="btn-label" id="btnLabelText">Tap to record</div>
 </div>
 
@@ -436,12 +350,14 @@
   "use strict";
 
   // --- DOM refs ---
-  const audioGate     = document.getElementById("audioGate");
-  const btnEnable     = document.getElementById("btnEnable");
-  const settingsToggle= document.getElementById("settingsToggle");
-  const settingsBody  = document.getElementById("settingsBody");
-  const inputSelect   = document.getElementById("inputSelect");
-  const outputSelect  = document.getElementById("outputSelect");
+  const audioGate      = document.getElementById("audioGate");
+  const btnEnable      = document.getElementById("btnEnable");
+  const settingsToggle = document.getElementById("settingsToggle");
+  const settingsBody   = document.getElementById("settingsBody");
+  const inputSelect    = document.getElementById("inputSelect");
+  const outputSelect   = document.getElementById("outputSelect");
+  const inputGainSlider= document.getElementById("inputGain");
+  const inputGainVal   = document.getElementById("inputGainVal");
   const fadeInSlider   = document.getElementById("fadeIn");
   const fadeInVal      = document.getElementById("fadeInVal");
   const fadeOutSlider  = document.getElementById("fadeOut");
@@ -452,21 +368,35 @@
   const meterBar       = document.getElementById("meterBar");
   const waveformCanvas = document.getElementById("waveformCanvas");
   const waveformLabel  = document.getElementById("waveformLabel");
+  const playhead       = document.getElementById("playhead");
   const btnRecord      = document.getElementById("btnRecord");
   const btnIcon        = document.getElementById("btnIcon");
   const btnLabelText   = document.getElementById("btnLabelText");
+  const btnLoop        = document.getElementById("btnLoop");
+  const btnFadeOut     = document.getElementById("btnFadeOut");
   const statusBar      = document.getElementById("statusBar");
 
   // --- State ---
   let audioCtx = null;
   let micStream = null;
   let analyserNode = null;
+  let meterGainNode = null;   // gain node for boosting meter signal
   let mediaRecorder = null;
   let recordedChunks = [];
-  let state = "idle"; // idle | recording | playing
+  let state = "idle";         // idle | recording | playing | ready
   let recordStartTime = 0;
   let playbackSource = null;
-  let animFrame = null;
+  let playbackGainNode = null;
+  let reversedBuffer = null;  // keep for replay
+  let loopEnabled = false;
+  let playbackStartCtxTime = 0;
+  let playbackDuration = 0;
+  let playheadRAF = null;
+
+  // --- SVG icon fragments ---
+  const ICON_RECORD  = '<circle cx="50" cy="50" r="36" />';
+  const ICON_STOP    = '<rect x="26" y="26" width="48" height="48" rx="6" />';
+  const ICON_PLAY    = '<polygon points="34,20 34,80 78,50" />';
 
   // --- Settings toggle ---
   settingsToggle.addEventListener("click", () => {
@@ -474,7 +404,12 @@
     settingsBody.classList.toggle("open");
   });
 
-  // --- Slider display ---
+  // --- Slider displays ---
+  inputGainSlider.addEventListener("input", () => {
+    const v = parseFloat(inputGainSlider.value);
+    inputGainVal.textContent = v.toFixed(1) + "x";
+    if (meterGainNode) meterGainNode.gain.value = v;
+  });
   fadeInSlider.addEventListener("input", () => {
     fadeInVal.textContent = parseFloat(fadeInSlider.value).toFixed(2) + "s";
   });
@@ -485,43 +420,52 @@
     rateVal.textContent = parseFloat(rateSlider.value).toFixed(2) + "x";
   });
 
+  // --- Loop toggle ---
+  btnLoop.addEventListener("click", () => {
+    loopEnabled = !loopEnabled;
+    btnLoop.classList.toggle("on", loopEnabled);
+  });
+
+  // --- Fade-out button ---
+  btnFadeOut.addEventListener("click", () => {
+    if (state === "playing" && playbackGainNode && audioCtx) {
+      const now = audioCtx.currentTime;
+      playbackGainNode.gain.cancelScheduledValues(now);
+      playbackGainNode.gain.setValueAtTime(playbackGainNode.gain.value, now);
+      playbackGainNode.gain.linearRampToValueAtTime(0, now + 0.6);
+      // Stop source after fade completes
+      setTimeout(() => {
+        if (state === "playing") finishPlayback("Faded out. Tap to replay.");
+      }, 650);
+    }
+  });
+
   // --- Device enumeration ---
   async function populateDevices() {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       inputSelect.innerHTML = "";
       outputSelect.innerHTML = "";
-
-      let inputCount = 0;
-      let outputCount = 0;
-
+      let ic = 0, oc = 0;
       for (const d of devices) {
         if (d.kind === "audioinput") {
-          inputCount++;
+          ic++;
           const opt = document.createElement("option");
           opt.value = d.deviceId;
-          opt.textContent = d.label || `Microphone ${inputCount}`;
+          opt.textContent = d.label || ("Microphone " + ic);
           inputSelect.appendChild(opt);
         } else if (d.kind === "audiooutput") {
-          outputCount++;
+          oc++;
           const opt = document.createElement("option");
           opt.value = d.deviceId;
-          opt.textContent = d.label || `Speaker ${outputCount}`;
+          opt.textContent = d.label || ("Speaker " + oc);
           outputSelect.appendChild(opt);
         }
       }
-
-      if (!inputCount) inputSelect.innerHTML = "<option>No inputs found</option>";
-      if (!outputCount) outputSelect.innerHTML = "<option>Default</option>";
+      if (!ic) inputSelect.innerHTML = "<option>No inputs found</option>";
+      if (!oc) outputSelect.innerHTML = "<option>Default</option>";
     } catch (e) {
       console.warn("Device enumeration failed:", e);
-    }
-  }
-
-  // --- Set output device on an element (if supported) ---
-  function setOutputDevice(el) {
-    if (el && typeof el.setSinkId === "function" && outputSelect.value) {
-      el.setSinkId(outputSelect.value).catch(() => {});
     }
   }
 
@@ -535,14 +479,13 @@
         audio: {
           echoCancellation: false,
           noiseSuppression: false,
-          autoGainControl: false
+          autoGainControl: true   // keep AGC on by default for mobile
         }
       });
 
       await populateDevices();
       setupAnalyser();
       showInfo();
-
       audioGate.classList.add("hidden");
       startMeter();
     } catch (err) {
@@ -560,7 +503,7 @@
           deviceId: { exact: inputSelect.value },
           echoCancellation: false,
           noiseSuppression: false,
-          autoGainControl: false
+          autoGainControl: true
         }
       });
       setupAnalyser();
@@ -570,44 +513,52 @@
     }
   });
 
-  // --- Analyser setup ---
+  // --- Analyser setup (with gain boost for metering) ---
   function setupAnalyser() {
-    if (analyserNode) {
-      try { analyserNode.disconnect(); } catch {}
-    }
+    if (analyserNode) { try { analyserNode.disconnect(); } catch {} }
+    if (meterGainNode) { try { meterGainNode.disconnect(); } catch {} }
+
+    const source = audioCtx.createMediaStreamSource(micStream);
+
+    // Gain node to boost quiet signals for the meter (does NOT affect recording)
+    meterGainNode = audioCtx.createGain();
+    meterGainNode.gain.value = parseFloat(inputGainSlider.value);
+
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 2048;
-    analyserNode.smoothingTimeConstant = 0.8;
-    const source = audioCtx.createMediaStreamSource(micStream);
-    source.connect(analyserNode);
+    analyserNode.smoothingTimeConstant = 0.7;
+
+    source.connect(meterGainNode);
+    meterGainNode.connect(analyserNode);
+    // Don't connect analyser to destination — meter only
   }
 
   // --- Info pills ---
   function showInfo() {
     const track = micStream.getAudioTracks()[0];
-    const settings = track.getSettings ? track.getSettings() : {};
-    const ch = settings.channelCount || 1;
+    const s = track.getSettings ? track.getSettings() : {};
+    const ch = s.channelCount || 1;
     const sr = audioCtx.sampleRate;
-    infoRow.innerHTML = `
-      <span class="info-pill">Input: ${ch === 1 ? "Mono" : ch === 2 ? "Stereo" : ch + "ch"}</span>
-      <span class="info-pill">${sr} Hz</span>
-    `;
+    infoRow.innerHTML =
+      '<span class="info-pill">Input: ' + (ch === 1 ? "Mono" : ch === 2 ? "Stereo" : ch + "ch") + '</span>' +
+      '<span class="info-pill">' + sr + ' Hz</span>';
   }
 
-  // --- Level meter ---
+  // --- Level meter (uses float data for accuracy) ---
   function startMeter() {
-    const data = new Uint8Array(analyserNode.fftSize);
+    const buf = new Float32Array(analyserNode.fftSize);
     function tick() {
-      analyserNode.getByteTimeDomainData(data);
+      analyserNode.getFloatTimeDomainData(buf);
       let peak = 0;
-      for (let i = 0; i < data.length; i++) {
-        const v = Math.abs(data[i] - 128) / 128;
+      for (let i = 0; i < buf.length; i++) {
+        const v = Math.abs(buf[i]);
         if (v > peak) peak = v;
       }
-      const pct = Math.min(peak * 100 * 2, 100);
+      // Map 0..1 to 0..100, clamp
+      const pct = Math.min(peak * 100, 100);
       meterBar.style.width = pct + "%";
       meterBar.classList.toggle("hot", pct > 85);
-      animFrame = requestAnimationFrame(tick);
+      requestAnimationFrame(tick);
     }
     tick();
   }
@@ -620,19 +571,15 @@
     waveformCanvas.width = rect.width * dpr;
     waveformCanvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
-
-    const w = rect.width;
-    const h = rect.height;
+    const w = rect.width, h = rect.height;
     const data = audioBuffer.getChannelData(0);
     const step = Math.max(1, Math.floor(data.length / w));
-
     ctx.clearRect(0, 0, w, h);
 
     const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     ctx.strokeStyle = isDark ? "#61a7ff" : "#0075ff";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-
     for (let x = 0; x < w; x++) {
       const idx = Math.floor(x * data.length / w);
       let min = 1, max = -1;
@@ -641,10 +588,8 @@
         if (s < min) min = s;
         if (s > max) max = s;
       }
-      const yMin = (1 - max) * h / 2;
-      const yMax = (1 - min) * h / 2;
-      ctx.moveTo(x, yMin);
-      ctx.lineTo(x, yMax);
+      ctx.moveTo(x, (1 - max) * h / 2);
+      ctx.lineTo(x, (1 - min) * h / 2);
     }
     ctx.stroke();
     waveformLabel.textContent = label;
@@ -654,40 +599,91 @@
     const ctx = waveformCanvas.getContext("2d");
     ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
     waveformLabel.textContent = "Idle";
+    playhead.style.display = "none";
+  }
+
+  // --- Playhead animation ---
+  function startPlayhead() {
+    const wrap = document.getElementById("waveformWrap");
+    const wrapWidth = wrap.getBoundingClientRect().width;
+    playhead.style.display = "block";
+
+    function tick() {
+      if (state !== "playing") { playhead.style.display = "none"; return; }
+      const elapsed = audioCtx.currentTime - playbackStartCtxTime;
+      const progress = Math.min(elapsed / playbackDuration, 1);
+      playhead.style.left = (progress * wrapWidth) + "px";
+      if (progress < 1) {
+        playheadRAF = requestAnimationFrame(tick);
+      }
+    }
+    tick();
+  }
+
+  function stopPlayhead() {
+    if (playheadRAF) cancelAnimationFrame(playheadRAF);
+    playhead.style.display = "none";
+  }
+
+  // --- Side button enable/disable helpers ---
+  function updateSideButtons() {
+    // Loop: always available once we have a buffer
+    btnLoop.classList.toggle("active", !!reversedBuffer);
+    // Fade-out: only while playing
+    btnFadeOut.classList.toggle("active", state === "playing");
   }
 
   // --- Main button logic ---
   btnRecord.addEventListener("click", handleButton);
 
   function handleButton() {
-    if (state === "idle") {
-      startRecording();
-    } else if (state === "recording") {
-      stopRecordingAndReverse();
-    } else if (state === "playing") {
-      stopPlayback();
+    switch (state) {
+      case "idle":
+        startRecording();
+        break;
+      case "recording":
+        stopRecordingAndReverse();
+        break;
+      case "playing":
+        finishPlayback("Stopped. Tap to replay.");
+        break;
+      case "ready":
+        // Replay the stored reversed buffer
+        playReversed(reversedBuffer);
+        break;
     }
   }
 
   function setButtonState(newState) {
     state = newState;
-    btnRecord.classList.remove("recording", "playing");
+    btnRecord.classList.remove("recording", "playing", "has-buffer");
 
-    if (newState === "idle") {
-      btnIcon.innerHTML = '<circle cx="50" cy="50" r="36" />';
-      btnLabelText.textContent = "Tap to record";
-      btnRecord.setAttribute("aria-label", "Record");
-    } else if (newState === "recording") {
-      btnRecord.classList.add("recording");
-      btnIcon.innerHTML = '<rect x="26" y="26" width="48" height="48" rx="6" />';
-      btnLabelText.textContent = "Tap to stop & reverse";
-      btnRecord.setAttribute("aria-label", "Stop recording");
-    } else if (newState === "playing") {
-      btnRecord.classList.add("playing");
-      btnIcon.innerHTML = '<rect x="26" y="26" width="48" height="48" rx="6" />';
-      btnLabelText.textContent = "Tap to stop";
-      btnRecord.setAttribute("aria-label", "Stop playback");
+    switch (newState) {
+      case "idle":
+        btnIcon.innerHTML = ICON_RECORD;
+        btnLabelText.textContent = "Tap to record";
+        btnRecord.setAttribute("aria-label", "Record");
+        break;
+      case "recording":
+        btnRecord.classList.add("recording");
+        btnIcon.innerHTML = ICON_STOP;
+        btnLabelText.textContent = "Tap to stop & reverse";
+        btnRecord.setAttribute("aria-label", "Stop recording");
+        break;
+      case "playing":
+        btnRecord.classList.add("playing");
+        btnIcon.innerHTML = ICON_STOP;
+        btnLabelText.textContent = "Tap to stop";
+        btnRecord.setAttribute("aria-label", "Stop playback");
+        break;
+      case "ready":
+        btnRecord.classList.add("has-buffer");
+        btnIcon.innerHTML = ICON_PLAY;
+        btnLabelText.textContent = "Tap to replay";
+        btnRecord.setAttribute("aria-label", "Replay reversed audio");
+        break;
     }
+    updateSideButtons();
   }
 
   // --- Timer ---
@@ -698,37 +694,31 @@
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
       const elapsed = (Date.now() - recordStartTime) / 1000;
-      statusBar.innerHTML = `${prefix} <span class="time">${formatTime(elapsed)}</span>`;
+      statusBar.innerHTML = prefix + ' <span class="time">' + formatTime(elapsed) + '</span>';
     }, 100);
   }
 
-  function stopTimer() {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
+  function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
 
   function formatTime(sec) {
     const m = Math.floor(sec / 60);
     const s = (sec % 60).toFixed(1);
-    return `${m}:${s.padStart(4, "0")}`;
+    return m + ":" + s.padStart(4, "0");
   }
 
   // --- Recording ---
   function startRecording() {
     recordedChunks = [];
+    reversedBuffer = null;
     try {
       mediaRecorder = new MediaRecorder(micStream, { mimeType: "audio/webm;codecs=opus" });
     } catch {
       mediaRecorder = new MediaRecorder(micStream);
     }
-
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) recordedChunks.push(e.data);
     };
-
-    mediaRecorder.onstop = () => {
-      processRecording();
-    };
+    mediaRecorder.onstop = () => processRecording();
 
     mediaRecorder.start(100);
     setButtonState("recording");
@@ -741,14 +731,17 @@
       mediaRecorder.stop();
     }
     stopTimer();
-    statusBar.textContent = "Processing...";
-    setButtonState("idle");
+    statusBar.textContent = "Processing\u2026";
+    // Temporarily show idle while processing
+    btnIcon.innerHTML = ICON_RECORD;
+    btnLabelText.textContent = "Processing\u2026";
   }
 
   // --- Process and play reversed ---
   async function processRecording() {
     if (!recordedChunks.length) {
       statusBar.textContent = "No audio captured.";
+      setButtonState("idle");
       return;
     }
 
@@ -760,11 +753,8 @@
 
       // Reverse each channel
       const reversed = audioCtx.createBuffer(
-        audioBuf.numberOfChannels,
-        audioBuf.length,
-        audioBuf.sampleRate
+        audioBuf.numberOfChannels, audioBuf.length, audioBuf.sampleRate
       );
-
       for (let ch = 0; ch < audioBuf.numberOfChannels; ch++) {
         const src = audioBuf.getChannelData(ch);
         const dst = reversed.getChannelData(ch);
@@ -773,71 +763,92 @@
         }
       }
 
+      reversedBuffer = reversed;
       drawWaveform(reversed, "Reversed");
       playReversed(reversed);
     } catch (err) {
       statusBar.textContent = "Decode error: " + err.message;
+      setButtonState("idle");
     }
   }
 
   function playReversed(buffer) {
-    const fadeIn = parseFloat(fadeInSlider.value);
-    const fadeOut = parseFloat(fadeOutSlider.value);
-    const rate = parseFloat(rateSlider.value);
+    // Stop any existing playback cleanly
+    if (playbackSource) {
+      try { playbackSource.onended = null; playbackSource.stop(); } catch {}
+    }
+    stopPlayhead();
 
-    const gainNode = audioCtx.createGain();
-    gainNode.connect(audioCtx.destination);
+    const fadeIn  = parseFloat(fadeInSlider.value);
+    const fadeOut = parseFloat(fadeOutSlider.value);
+    const rate    = parseFloat(rateSlider.value);
+
+    playbackGainNode = audioCtx.createGain();
+    playbackGainNode.connect(audioCtx.destination);
 
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
     source.playbackRate.value = rate;
-    source.connect(gainNode);
+    source.connect(playbackGainNode);
 
     const duration = buffer.duration / rate;
     const now = audioCtx.currentTime;
 
     // Fade in
     if (fadeIn > 0) {
-      gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(1, now + Math.min(fadeIn, duration));
+      playbackGainNode.gain.setValueAtTime(0, now);
+      playbackGainNode.gain.linearRampToValueAtTime(1, now + Math.min(fadeIn, duration));
     } else {
-      gainNode.gain.setValueAtTime(1, now);
+      playbackGainNode.gain.setValueAtTime(1, now);
     }
 
-    // Fade out
-    if (fadeOut > 0 && duration > fadeOut) {
-      gainNode.gain.setValueAtTime(1, now + duration - fadeOut);
-      gainNode.gain.linearRampToValueAtTime(0, now + duration);
+    // Fade out (auto, at end of buffer)
+    if (fadeOut > 0 && duration > fadeOut + fadeIn) {
+      playbackGainNode.gain.setValueAtTime(1, now + duration - fadeOut);
+      playbackGainNode.gain.linearRampToValueAtTime(0, now + duration);
     }
 
     source.start(0);
     playbackSource = source;
+    playbackStartCtxTime = now;
+    playbackDuration = duration;
+
     setButtonState("playing");
     startTimer("Playing reversed");
+    startPlayhead();
 
     source.onended = () => {
-      if (state === "playing") {
+      if (state !== "playing") return;
+      if (loopEnabled && reversedBuffer) {
+        // Seamless loop
         stopTimer();
-        setButtonState("idle");
-        statusBar.textContent = "Done. Tap to record again.";
+        stopPlayhead();
+        playReversed(reversedBuffer);
+      } else {
+        finishPlayback("Done. Tap to replay.");
       }
     };
   }
 
-  function stopPlayback() {
+  function finishPlayback(msg) {
     if (playbackSource) {
-      try { playbackSource.stop(); } catch {}
+      try { playbackSource.onended = null; playbackSource.stop(); } catch {}
       playbackSource = null;
     }
     stopTimer();
-    setButtonState("idle");
-    statusBar.textContent = "Stopped. Tap to record.";
+    stopPlayhead();
+    // If we have a buffer, go to "ready" state so user can replay
+    if (reversedBuffer) {
+      setButtonState("ready");
+      statusBar.textContent = msg || "Tap to replay.";
+    } else {
+      setButtonState("idle");
+      statusBar.textContent = msg || "Ready.";
+    }
   }
 
   // --- Handle output device change ---
   outputSelect.addEventListener("change", () => {
-    // setSinkId only works on HTMLMediaElement; for Web Audio we'd need
-    // AudioContext.setSinkId (Chrome 110+). Try it if available.
     if (audioCtx && typeof audioCtx.setSinkId === "function" && outputSelect.value) {
       audioCtx.setSinkId(outputSelect.value).catch(() => {});
     }
