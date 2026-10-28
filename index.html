@@ -263,7 +263,8 @@
       { path: "note_detection_v2.html", description: "Lead-sheet style transcriber with live note, chord, and staff rendering." },
       { path: "uke_chord_buddy.html", description: "Explore grouped ukulele chords with fast mobile-friendly controls." },
       { path: "time_to_chords.html", description: "Time-synced jam session generator with 12 sections, chord charts, grand staff notation, and audio cues." },
-      { path: "there_and_back_again.html", description: "Moved to its own app: hold to record, let go to hear it backwards." }
+      { path: "there_and_back_again.html", description: "Moved to its own app: hold to record, let go to hear it backwards." },
+      { path: "orpheus_in_the_underworld/index.html", description: "A mobile video-game journey through Offenbach's Orpheus in the Underworld: story, quizzes, mini-games and the can-can." }
     ];
 
     const appsGrid = document.getElementById("appsGrid");
@@ -289,7 +290,8 @@
 
     function isTargetHtml(path) {
       const lower = path.toLowerCase();
-      return lower.endsWith(".html") && lower !== "index.html" && !lower.endsWith("/index.html");
+      // Root index is this page; a subfolder's index.html is an app in its own folder.
+      return lower.endsWith(".html") && lower !== "index.html";
     }
 
     function descriptionForPath(path) {

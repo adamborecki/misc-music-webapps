@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#14060d" />
+  <meta name="description" content="A can-can video-game journey through Offenbach's comic opera Orpheus in the Underworld (Orphée aux enfers, 1858)." />
+  <title>Orpheus in the Underworld</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;0,800;1,400&family=Limelight&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="game" aria-live="polite">
+    <!-- Title -->
+    <section id="title" class="screen">
+      <div class="title-bg" id="titleBg"></div>
+      <div class="title-cast" id="titleCast"></div>
+      <div class="marquee" id="marquee">
+        <div class="marquee-pre">Jacques Offenbach's</div>
+        <h1><span class="t1">Orpheus</span><span class="t2">in the</span><span class="t3">Underworld</span></h1>
+        <div class="marquee-sub">Orphée aux enfers · Paris, 1858</div>
+      </div>
+      <div class="title-actions">
+        <button class="btn gold big" id="btnStart">Raise the Curtain</button>
+        <button class="btn ghost" id="btnContinue">Continue the Journey</button>
+        <p class="title-tip">🔊 Best with sound on · Tap to play</p>
+      </div>
+    </section>
+
+    <!-- Journey map -->
+    <section id="map" class="screen">
+      <header class="map-head">
+        <button class="icon-btn" id="mapMenu" aria-label="Menu">☰</button>
+        <div class="map-title">
+          <div class="map-kicker">The Journey</div>
+          <div class="map-name" id="mapName">Orpheus in the Underworld</div>
+        </div>
+        <div class="rose-count" title="Roses from the audience"><span class="rose-ico">🌹</span><span class="roses">0</span></div>
+      </header>
+      <div class="map-scroll" id="mapScroll"></div>
+    </section>
+
+    <!-- Scene -->
+    <section id="scene" class="screen">
+      <div id="stage">
+        <div id="bg"></div>
+        <canvas id="fx"></canvas>
+        <div id="actors"></div>
+        <div id="flash"></div>
+      </div>
+      <header id="hud">
+        <button class="icon-btn" id="hudMenu" aria-label="Menu">☰</button>
+        <div class="hud-title" id="hudTitle"></div>
+        <div class="rose-count"><span class="rose-ico">🌹</span><span class="roses">0</span></div>
+      </header>
+      <section id="dialog" class="dlg" aria-live="polite">
+        <div class="nameplate" id="nameplate"><span class="np-portrait" id="npPortrait"></span><span class="np-name" id="npName"></span></div>
+        <div class="dlg-text" id="dlgText"></div>
+        <div class="dlg-choices" id="dlgChoices"></div>
+        <div class="dlg-next" id="dlgNext" aria-hidden="true">▼</div>
+      </section>
+    </section>
+
+    <!-- Overlays: mini-games, cards, menus -->
+    <section id="modal" class="modal" aria-modal="true"></section>
+    <div id="curtain"><div class="cur left"></div><div class="cur right"></div><div class="cur-valance"></div></div>
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/story.js"></script>
+  <script src="js/games.js"></script>
+  <script src="js/engine.js"></script>
+</body>
+</html>
